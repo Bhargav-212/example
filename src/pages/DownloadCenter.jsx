@@ -124,30 +124,26 @@ const DownloadCenter = () => {
 
   const downloadFromIPFS = async (document) => {
     setDownloadStatus(prev => ({ ...prev, [document.id]: 'downloading' }))
-    
+
     try {
-      // Simulate download process
-      const ipfsUrl = `https://ipfs.io/ipfs/${document.ipfsHash}`
-      
-      // In a real implementation, you would fetch the file from IPFS
-      // For demo purposes, we'll simulate the download
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Create a mock blob for demonstration
-      const blob = new Blob(['Mock file content'], { type: document.mimeType })
-      const url = URL.createObjectURL(blob)
-      
-      // Create download link
-      const link = document.createElement('a')
-      link.href = url
-      link.download = document.fileName
-      link.click()
-      
-      // Cleanup
-      URL.revokeObjectURL(url)
-      link.remove()
-      
-      setDownloadStatus(prev => ({ ...prev, [document.id]: 'completed' }))
+      console.log('Starting download:', document.fileName, document.ipfsHash)
+
+      // Use IPFS service to download the file
+      const result = await ipfsService.downloadFile(document.ipfsHash, document.fileName)
+
+      if (result.success) {
+        setDownloadStatus(prev => ({ ...prev, [document.id]: 'completed' }))
+        toast.success(`${document.fileName} downloaded successfully!`)
+
+        // Update download count (in a real app, this would be tracked on-chain)
+        setDocuments(prev => prev.map(doc =>
+          doc.id === document.id
+            ? { ...doc, downloadCount: doc.downloadCount + 1, lastDownload: new Date().toISOString() }
+            : doc
+        ))
+      } else {
+        throw new Error('Download failed')
+      }
       toast.success(`${document.fileName} downloaded successfully!`)
       
       // Reset status after 3 seconds
