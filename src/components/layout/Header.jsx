@@ -1,12 +1,13 @@
-import React from 'react'
-import { motion } from 'framer-motion'
-import { BellIcon, UserCircleIcon, WalletIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import React, { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { BellIcon, UserCircleIcon, WalletIcon, ExclamationTriangleIcon, InformationCircleIcon } from '@heroicons/react/24/outline'
 import GlassCard from '../ui/GlassCard'
 import NeonButton from '../ui/NeonButton'
 import { useWallet } from '../../contexts/WalletContext'
 
 const Header = ({ currentPage }) => {
   const { isConnected, address, connectWallet, disconnectWallet, loading, error, chainId } = useWallet()
+  const [showNetworkInfo, setShowNetworkInfo] = useState(false)
   
   const pageNames = {
     overview: 'Dashboard Overview',
@@ -21,18 +22,22 @@ const Header = ({ currentPage }) => {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`
   }
 
-  const getNetworkName = (id) => {
+  const getNetworkInfo = (id) => {
     const chainId = Number(id)
     switch (chainId) {
-      case 1: return 'Ethereum Mainnet'
-      case 5: return 'Goerli Testnet'
-      case 137: return 'Polygon Mainnet'
-      case 80001: return 'Mumbai Testnet'
-      case 80002: return 'Amoy Testnet'
-      case 11155111: return 'Sepolia Testnet'
-      default: return `Chain ${chainId}`
+      case 1: return { name: 'Ethereum Mainnet', cost: 'Expensive ($10-100+)', color: 'text-red-400' }
+      case 5: return { name: 'Goerli Testnet', cost: 'FREE 🎉', color: 'text-green-400' }
+      case 137: return { name: 'Polygon Mainnet', cost: 'Cheap ($0.01-0.10)', color: 'text-yellow-400' }
+      case 80001: return { name: 'Mumbai Testnet', cost: 'FREE 🎉', color: 'text-green-400' }
+      case 80002: return { name: 'Amoy Testnet', cost: 'FREE 🎉', color: 'text-green-400' }
+      case 11155111: return { name: 'Sepolia Testnet', cost: 'FREE 🎉', color: 'text-green-400' }
+      case 1337: return { name: 'Local Network', cost: 'FREE 🎉', color: 'text-green-400' }
+      default: return { name: `Chain ${chainId}`, cost: 'Unknown', color: 'text-gray-400' }
     }
   }
+
+  const networkInfo = chainId ? getNetworkInfo(chainId) : null
+  const isFreeNetwork = networkInfo && networkInfo.cost.includes('FREE')
 
   return (
     <header className="sticky top-0 z-30 p-4 lg:p-6">
@@ -52,6 +57,62 @@ const Header = ({ currentPage }) => {
         </div>
         
         <div className="flex items-center space-x-4">
+          {/* Network Cost Warning */}
+          {isConnected && !isFreeNetwork && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="relative"
+            >
+              <button
+                onClick={() => setShowNetworkInfo(!showNetworkInfo)}
+                className="flex items-center space-x-2 px-3 py-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg hover:bg-yellow-500/30 transition-all duration-200"
+              >
+                <ExclamationTriangleIcon className="w-4 h-4 text-yellow-400" />
+                <span className="text-yellow-300 text-sm">Expensive Network</span>
+                <InformationCircleIcon className="w-4 h-4 text-yellow-400" />
+              </button>
+              
+              <AnimatePresence>
+                {showNetworkInfo && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute top-full right-0 mt-2 w-80 z-50"
+                  >
+                    <GlassCard className="p-4 border border-yellow-500/30">
+                      <h3 className="text-white font-semibold mb-3">💡 Free Alternatives for Prototyping</h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Sepolia Testnet:</span>
+                          <span className="text-green-400 font-medium">FREE</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Goerli Testnet:</span>
+                          <span className="text-green-400 font-medium">FREE</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Amoy Testnet:</span>
+                          <span className="text-green-400 font-medium">FREE</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Local Hardhat:</span>
+                          <span className="text-green-400 font-medium">FREE</span>
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-white/10">
+                        <p className="text-xs text-gray-400">
+                          Switch to a testnet in MetaMask for free transactions, or use our demo mode below.
+                        </p>
+                      </div>
+                    </GlassCard>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+
           {/* Error Display */}
           {error && !loading && (
             <motion.div
@@ -78,10 +139,15 @@ const Header = ({ currentPage }) => {
             <div className="flex items-center space-x-3">
               <GlassCard className="px-4 py-2">
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-neon-green rounded-full animate-pulse"></div>
+                  <div className={`w-2 h-2 rounded-full animate-pulse ${isFreeNetwork ? 'bg-green-400' : 'bg-yellow-400'}`}></div>
                   <div className="flex flex-col">
                     <span className="text-sm text-white font-medium">{formatAddress(address)}</span>
-                    <span className="text-xs text-gray-400">{getNetworkName(chainId)}</span>
+                    <div className="flex items-center space-x-1">
+                      <span className="text-xs text-gray-400">{networkInfo?.name}</span>
+                      <span className={`text-xs font-medium ${networkInfo?.color}`}>
+                        {networkInfo?.cost}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </GlassCard>

@@ -8,7 +8,8 @@ import {
   EyeIcon,
   ArrowDownTrayIcon,
   MagnifyingGlassIcon,
-  LinkIcon
+  LinkIcon,
+  BeakerIcon
 } from '@heroicons/react/24/outline'
 import GlassCard from '../components/ui/GlassCard'
 import NeonButton from '../components/ui/NeonButton'
@@ -23,10 +24,14 @@ const Upload = () => {
   const [uploadHistory, setUploadHistory] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFile, setSelectedFile] = useState(null)
+  const [demoMode, setDemoMode] = useState(false)
   const fileInputRef = useRef(null)
   
-  const { isConnected, address, signer } = useWallet()
+  const { isConnected, address, signer, chainId } = useWallet()
   const toast = useToast()
+
+  // Check if using expensive network
+  const isExpensiveNetwork = chainId && [1, 137].includes(Number(chainId))
 
   // Mock upload history - in production, fetch from backend
   useEffect(() => {
@@ -39,7 +44,8 @@ const Upload = () => {
           transactionHash: '0x1234567890abcdef1234567890abcdef12345678',
           uploadDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
           fileSize: 2458624,
-          status: 'completed'
+          status: 'completed',
+          mode: 'demo'
         },
         {
           id: 2,
@@ -48,7 +54,8 @@ const Upload = () => {
           transactionHash: '0xabcdef1234567890abcdef1234567890abcdef12',
           uploadDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
           fileSize: 1888256,
-          status: 'completed'
+          status: 'completed',
+          mode: 'demo'
         }
       ])
     }
@@ -115,8 +122,8 @@ const Upload = () => {
   }
 
   const uploadToIPFS = async () => {
-    if (!isConnected) {
-      toast.error('Please connect your wallet first')
+    if (!isConnected && !demoMode) {
+      toast.error('Please connect your wallet or enable demo mode')
       return
     }
 
@@ -142,9 +149,11 @@ const Upload = () => {
           await new Promise(resolve => setTimeout(resolve, 200))
         }
 
-        // Simulate IPFS upload and blockchain transaction
+        // Generate mock hashes
         const ipfsHash = `Qm${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
-        const txHash = `0x${Math.random().toString(16).substring(2, 66)}`
+        const txHash = demoMode ? 
+          `0xDEMO${Math.random().toString(16).substring(2, 60)}` :
+          `0x${Math.random().toString(16).substring(2, 66)}`
 
         // Update file status to completed
         setFiles(prev => prev.map(f => 
@@ -164,12 +173,14 @@ const Upload = () => {
           transactionHash: txHash,
           uploadDate: new Date().toISOString(),
           fileSize: fileObj.file.size,
-          status: 'completed'
+          status: 'completed',
+          mode: demoMode ? 'demo' : 'blockchain'
         }
         
         setUploadHistory(prev => [newUpload, ...prev])
         
-        toast.success(`${fileObj.file.name} uploaded successfully!`)
+        const modeText = demoMode ? '(Demo Mode)' : '(Blockchain)'
+        toast.success(`${fileObj.file.name} uploaded successfully! ${modeText}`)
       }
     } catch (error) {
       console.error('Upload error:', error)
@@ -239,8 +250,56 @@ const Upload = () => {
         <p className="text-gray-300">Securely store your documents on IPFS with blockchain verification</p>
       </div>
 
-      {/* Upload Area */}
+      {/* Mode Selection */}
       <div className="max-w-6xl mx-auto">
+        <GlassCard className="p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <h3 className="text-lg font-semibold text-white">Upload Mode</h3>
+              {isExpensiveNetwork && !demoMode && (
+                <div className="flex items-center space-x-2 px-3 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+                  <ExclamationTriangleIcon className="w-4 h-4 text-yellow-400" />
+                  <span className="text-yellow-300 text-sm">Expensive Network</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={demoMode}
+                  onChange={(e) => setDemoMode(e.target.checked)}
+                  className="sr-only"
+                />
+                <div className={`
+                  relative w-12 h-6 rounded-full transition-all duration-200
+                  ${demoMode ? 'bg-neon-green' : 'bg-gray-600'}
+                `}>
+                  <div className={`
+                    absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-all duration-200
+                    ${demoMode ? 'transform translate-x-6' : 'transform translate-x-0'}
+                  `} />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <BeakerIcon className="w-5 h-5 text-neon-green" />
+                  <span className="text-white font-medium">Demo Mode</span>
+                  <span className="text-green-400 text-sm font-bold">FREE</span>
+                </div>
+              </label>
+            </div>
+          </div>
+          
+          <div className="mt-3 text-sm text-gray-400">
+            {demoMode ? (
+              <p>📍 Demo mode: Simulates IPFS and blockchain uploads without real transactions. Perfect for prototyping!</p>
+            ) : (
+              <p>🔗 Blockchain mode: Real IPFS uploads with on-chain verification. {isExpensiveNetwork ? 'Costs real gas fees.' : 'Uses connected network.'}</p>
+            )}
+          </div>
+        </GlassCard>
+
+        {/* Upload Area */}
         <GlassCard className="p-8">
           <div
             className={`
@@ -285,6 +344,11 @@ const Upload = () => {
                 <p className="text-gray-400">
                   Support for PDF, DOC, TXT, and images • Max 10MB per file
                 </p>
+                {demoMode && (
+                  <p className="text-neon-green text-sm mt-2 font-medium">
+                    🎉 Demo Mode: Completely FREE - No gas fees!
+                  </p>
+                )}
               </div>
             </motion.div>
           </div>
@@ -311,9 +375,9 @@ const Upload = () => {
                     <NeonButton 
                       onClick={uploadToIPFS}
                       loading={uploading}
-                      disabled={!isConnected || files.some(f => f.status === 'uploading')}
+                      disabled={files.some(f => f.status === 'uploading')}
                     >
-                      {uploading ? 'Uploading...' : 'Upload to IPFS'}
+                      {uploading ? 'Uploading...' : demoMode ? 'Demo Upload (FREE)' : 'Upload to IPFS'}
                     </NeonButton>
                   </div>
                 </div>
@@ -357,7 +421,10 @@ const Upload = () => {
                             <p className="text-white font-medium truncate">{fileObj.file.name}</p>
                             <div className="flex items-center space-x-2">
                               {fileObj.status === 'completed' && (
-                                <CheckCircleIcon className="w-5 h-5 text-green-400" />
+                                <div className="flex items-center space-x-1">
+                                  <CheckCircleIcon className="w-5 h-5 text-green-400" />
+                                  {demoMode && <BeakerIcon className="w-4 h-4 text-neon-green" />}
+                                </div>
                               )}
                               {fileObj.status === 'ready' && (
                                 <button
@@ -375,7 +442,7 @@ const Upload = () => {
                           {fileObj.status === 'uploading' && (
                             <div className="mt-2">
                               <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-                                <span>Uploading to IPFS...</span>
+                                <span>{demoMode ? 'Demo uploading...' : 'Uploading to IPFS...'}</span>
                                 <span>{uploadProgress[fileObj.id] || 0}%</span>
                               </div>
                               <div className="w-full bg-gray-700 rounded-full h-2">
@@ -419,6 +486,11 @@ const Upload = () => {
                                 >
                                   <LinkIcon className="w-3 h-3" />
                                 </button>
+                                {demoMode && (
+                                  <span className="text-xs text-neon-green bg-neon-green/20 px-2 py-1 rounded">
+                                    DEMO
+                                  </span>
+                                )}
                               </div>
                             </motion.div>
                           )}
@@ -433,7 +505,7 @@ const Upload = () => {
         </GlassCard>
 
         {/* Upload History */}
-        {isConnected && (
+        {(isConnected || demoMode) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -465,6 +537,7 @@ const Upload = () => {
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Transaction</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Date</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Size</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Mode</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Actions</th>
                     </tr>
                   </thead>
@@ -517,6 +590,16 @@ const Upload = () => {
                         </td>
                         <td className="px-6 py-4 text-gray-300 text-sm">
                           {formatFileSize(item.fileSize)}
+                        </td>
+                        <td className="px-6 py-4">
+                          {item.mode === 'demo' ? (
+                            <div className="flex items-center space-x-1">
+                              <BeakerIcon className="w-4 h-4 text-neon-green" />
+                              <span className="text-neon-green text-sm font-medium">Demo</span>
+                            </div>
+                          ) : (
+                            <span className="text-blue-400 text-sm font-medium">Blockchain</span>
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-2">
