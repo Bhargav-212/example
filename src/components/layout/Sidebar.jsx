@@ -7,7 +7,10 @@ import {
   ClockIcon,
   ChatBubbleLeftRightIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  FolderOpenIcon,
+  ArrowDownTrayIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline'
 import GlassCard from '../ui/GlassCard'
 
@@ -18,9 +21,12 @@ const Sidebar = ({ currentPage, onPageChange, className = '' }) => {
   const navigation = [
     { id: 'overview', name: 'Overview', icon: HomeIcon },
     { id: 'upload', name: 'Upload', icon: CloudArrowUpIcon },
-    { id: 'access', name: 'Access', icon: DocumentIcon },
+    { id: 'recent', name: 'Recent Documents', icon: FolderOpenIcon },
+    { id: 'access', name: 'Access Files', icon: DocumentIcon },
     { id: 'activity', name: 'Activity Logs', icon: ClockIcon },
-    { id: 'chat', name: 'AI Chat', icon: ChatBubbleLeftRightIcon }
+    { id: 'download', name: 'Download Center', icon: ArrowDownTrayIcon },
+    { id: 'chat', name: 'AI Document Chat', icon: ChatBubbleLeftRightIcon },
+    { id: 'control', name: 'Access Control', icon: ShieldCheckIcon }
   ]
   
   const sidebarVariants = {
@@ -38,7 +44,7 @@ const Sidebar = ({ currentPage, onPageChange, className = '' }) => {
       }}
       className={`
         w-full flex items-center px-4 py-3 rounded-xl
-        transition-all duration-200 group
+        transition-all duration-200 group relative
         ${isActive 
           ? 'bg-neon-green/20 text-neon-green border border-neon-green/30' 
           : 'text-gray-300 hover:text-white hover:bg-white/10'
@@ -93,7 +99,7 @@ const Sidebar = ({ currentPage, onPageChange, className = '' }) => {
       </div>
       
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-2">
+      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
         {navigation.map((item) => (
           <NavItem 
             key={item.id} 
