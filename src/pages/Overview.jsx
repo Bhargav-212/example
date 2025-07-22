@@ -20,8 +20,23 @@ import {
 import StatCard from '../components/ui/StatCard'
 import GlassCard from '../components/ui/GlassCard'
 import IntegrationStatus from '../components/ui/IntegrationStatus'
+import ContractAddressValidator from '../components/ui/ContractAddressValidator'
+import { useWallet } from '../contexts/WalletContext'
+import { getContractConfig } from '../config/contract'
+import { isValidAddress } from '../utils/addressUtils'
 
 const Overview = () => {
+  const { chainId, contractInitialized } = useWallet()
+
+  // Check if contract setup is needed
+  const needsContractSetup = () => {
+    if (!chainId) return false
+    const config = getContractConfig(chainId)
+    const isExampleAddress = config.contractAddress?.toLowerCase() === '0x742d35cc6506c4a9e6d29f0f9f5a8df07c9c31a5'
+    const isInvalidAddress = !isValidAddress(config.contractAddress)
+    return isExampleAddress || isInvalidAddress || !contractInitialized
+  }
+
   // Mock data for charts
   const uploadData = [
     { day: 'Mon', uploads: 12, downloads: 8 },
@@ -77,6 +92,17 @@ const Overview = () => {
 
       {/* Integration Status */}
       <IntegrationStatus />
+
+      {/* Contract Setup Helper */}
+      {needsContractSetup() && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <ContractAddressValidator />
+        </motion.div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
