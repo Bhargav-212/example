@@ -12,76 +12,61 @@ import GlassCard from '../components/ui/GlassCard'
 import NeonButton from '../components/ui/NeonButton'
 import { useWallet } from '../contexts/WalletContext'
 import { useToast } from '../components/ui/Toast'
+import contractService from '../services/contractService'
+import { getContractConfig } from '../config/contract'
 
 const RecentDocuments = () => {
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
-  const { isConnected, address, chainId } = useWallet()
+  const [error, setError] = useState('')
+  const { isConnected, address, chainId, contractInitialized } = useWallet()
   const toast = useToast()
 
-  // Mock Sepolia contract data - in production, this would fetch from actual contract
+  // Fetch documents from deployed smart contract
   useEffect(() => {
     const fetchDocuments = async () => {
-      setLoading(true)
-      
-      // Simulate contract call delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      if (isConnected && address) {
-        const mockDocuments = [
-          {
-            id: 1,
-            fileName: 'SecureX_Whitepaper_v2.pdf',
-            ipfsHash: 'QmXyZ123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz8',
-            uploadDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            fileSize: 2458624,
-            uploader: address,
-            blockNumber: 4892341,
-            transactionHash: '0x1234567890abcdef1234567890abcdef12345678901234567890abcdef123456',
-            views: 45
-          },
-          {
-            id: 2,
-            fileName: 'Smart_Contract_Audit_Report.pdf',
-            ipfsHash: 'QmAbc456def789xyz123uvw456qrs789tuv012wxy345abc678def901ghi234',
-            uploadDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-            fileSize: 1888256,
-            uploader: address,
-            blockNumber: 4891205,
-            transactionHash: '0xabcdef1234567890abcdef1234567890abcdef12345678901234567890abcd',
-            views: 23
-          },
-          {
-            id: 3,
-            fileName: 'Technical_Documentation.docx',
-            ipfsHash: 'QmDef789ghi012jkl345mno678pqr901stu234vwx567yz8abc123def456',
-            uploadDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-            fileSize: 3247616,
-            uploader: address,
-            blockNumber: 4890850,
-            transactionHash: '0x789abc123def456ghi789jkl012mno345pqr678stu901vwx234yz567890',
-            views: 67
-          },
-          {
-            id: 4,
-            fileName: 'Project_Roadmap_2024.pdf',
-            ipfsHash: 'QmGhi012jkl345mno678pqr901stu234vwx567yz8abc123def456ghi789',
-            uploadDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-            fileSize: 1567890,
-            uploader: address,
-            blockNumber: 4889234,
-            transactionHash: '0x456def789ghi012jkl345mno678pqr901stu234vwx567yz8abc123def456',
-            views: 89
-          }
-        ]
-        setDocuments(mockDocuments)
+      if (!isConnected || !address || !contractInitialized) {
+        setLoading(false)
+        return
       }
-      
-      setLoading(false)
+
+      setLoading(true)
+      setError('')
+
+      try {
+        console.log('Fetching documents from contract for:', address)
+        const contractDocs = await contractService.getUserDocuments(address)
+
+        // Add mock blockchain data for display purposes
+        const enhancedDocs = contractDocs.map((doc, index) => ({
+          ...doc,
+          blockNumber: 4890000 + index * 100, // Mock block numbers
+          transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`, // Mock tx hashes
+          views: Math.floor(Math.random() * 100) + 1 // Mock view counts
+        }))
+
+        setDocuments(enhancedDocs)
+
+        if (contractDocs.length === 0) {
+          console.log('No documents found for this address')
+        } else {
+          console.log(`Found ${contractDocs.length} documents`)
+        }
+
+      } catch (error) {
+        console.error('Error fetching documents:', error)
+        setError(error.message)
+        toast.error(`Failed to load documents: ${error.message}`)
+
+        // Fallback to empty array
+        setDocuments([])
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchDocuments()
-  }, [isConnected, address])
+  }, [isConnected, address, contractInitialized, toast])
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes'
@@ -108,7 +93,7 @@ const RecentDocuments = () => {
         return '📄'
       case 'doc':
       case 'docx':
-        return '📝'
+        return '��'
       case 'txt':
         return '📃'
       case 'jpg':
@@ -136,8 +121,8 @@ const RecentDocuments = () => {
   }
 
   const viewOnExplorer = (txHash) => {
-    const baseUrl = chainId === 11155111n ? 'https://sepolia.etherscan.io' : 'https://etherscan.io'
-    window.open(`${baseUrl}/tx/${txHash}`, '_blank')
+    const config = getContractConfig(chainId)
+    window.open(`${config.blockExplorer}/tx/${txHash}`, '_blank')
   }
 
   if (!isConnected) {
@@ -147,7 +132,21 @@ const RecentDocuments = () => {
           <DocumentIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h2>
           <p className="text-gray-400">
-            Please connect your wallet to view recent documents from the Sepolia contract.
+            Please connect your wallet to view recent documents from your deployed smart contract.
+          </p>
+        </GlassCard>
+      </div>
+    )
+  }
+
+  if (isConnected && !contractInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <GlassCard className="p-8 text-center">
+          <DocumentIcon className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-white mb-2">Contract Initializing</h2>
+          <p className="text-gray-400">
+            Connecting to your smart contract on {chainId === 11155111n ? 'Sepolia' : 'current network'}...
           </p>
         </GlassCard>
       </div>
@@ -161,13 +160,25 @@ const RecentDocuments = () => {
           <h1 className="text-3xl font-bold text-white mb-4">Recent Documents</h1>
           <p className="text-gray-300">Documents uploaded to Sepolia smart contract</p>
         </div>
-        <div className="flex items-center space-x-2 text-sm text-gray-400">
-          <span>Connected to:</span>
-          <span className={`px-2 py-1 rounded-lg ${
-            chainId === 11155111n ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
-          }`}>
-            {chainId === 11155111n ? 'Sepolia Testnet' : 'Other Network'}
-          </span>
+        <div className="flex items-center space-x-4 text-sm text-gray-400">
+          <div className="flex items-center space-x-2">
+            <span>Connected to:</span>
+            <span className={`px-2 py-1 rounded-lg ${
+              chainId === 11155111n ? 'bg-green-500/20 text-green-400' :
+              chainId === 5n ? 'bg-blue-500/20 text-blue-400' : 'bg-yellow-500/20 text-yellow-400'
+            }`}>
+              {chainId === 11155111n ? 'Sepolia Testnet' :
+               chainId === 5n ? 'Goerli Testnet' : 'Other Network'}
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span>Contract:</span>
+            <span className={`px-2 py-1 rounded-lg ${
+              contractInitialized ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+            }`}>
+              {contractInitialized ? '✓ Connected' : '✗ Failed'}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -267,11 +278,24 @@ const RecentDocuments = () => {
           <DocumentIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-white mb-2">No Documents Found</h2>
           <p className="text-gray-400 mb-6">
-            No documents have been uploaded to the Sepolia contract from this address.
+            {error ?
+              `Error loading documents: ${error}` :
+              'No documents have been uploaded to your smart contract from this address.'
+            }
           </p>
-          <NeonButton onClick={() => window.location.href = '#upload'}>
-            Upload Your First Document
-          </NeonButton>
+          <div className="space-y-3">
+            <NeonButton onClick={() => window.location.href = '#upload'}>
+              Upload Your First Document
+            </NeonButton>
+            {error && (
+              <button
+                onClick={() => window.location.reload()}
+                className="block mx-auto px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-600 hover:border-gray-500 rounded-lg transition-all duration-200"
+              >
+                Retry Loading
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
