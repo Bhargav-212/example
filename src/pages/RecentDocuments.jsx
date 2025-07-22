@@ -19,13 +19,13 @@ const RecentDocuments = () => {
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const { isConnected, address, chainId, contractInitialized } = useWallet()
+  const { isConnected, address, chainId, contractInitialized, demoMode } = useWallet()
   const toast = useToast()
 
   // Fetch documents from deployed smart contract
   useEffect(() => {
     const fetchDocuments = async () => {
-      if (!isConnected || !address || !contractInitialized) {
+      if (!isConnected || !address || (!contractInitialized && !demoMode)) {
         setLoading(false)
         return
       }
@@ -34,8 +34,25 @@ const RecentDocuments = () => {
       setError('')
 
       try {
-        console.log('Fetching documents from contract for:', address)
-        const contractDocs = await contractService.getUserDocuments(address)
+        console.log('Fetching documents for:', address, demoMode ? '(Demo Mode)' : '(Contract)')
+
+        let contractDocs
+        if (demoMode) {
+          // Return demo documents
+          contractDocs = [
+            {
+              id: 1,
+              fileName: 'Demo_Document.pdf',
+              ipfsHash: 'QmDemo123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz8',
+              uploadDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+              fileSize: 1234567,
+              uploader: address,
+              timestamp: Math.floor(Date.now() / 1000) - 172800
+            }
+          ]
+        } else {
+          contractDocs = await contractService.getUserDocuments(address)
+        }
 
         // Add mock blockchain data for display purposes
         const enhancedDocs = contractDocs.map((doc, index) => ({
@@ -66,7 +83,7 @@ const RecentDocuments = () => {
     }
 
     fetchDocuments()
-  }, [isConnected, address, contractInitialized, toast])
+  }, [isConnected, address, contractInitialized, demoMode, toast])
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes'
@@ -139,7 +156,7 @@ const RecentDocuments = () => {
     )
   }
 
-  if (isConnected && !contractInitialized) {
+  if (isConnected && !contractInitialized && !demoMode) {
     return (
       <div className="flex items-center justify-center min-h-96">
         <GlassCard className="p-8 text-center">
