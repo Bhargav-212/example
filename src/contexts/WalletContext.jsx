@@ -21,6 +21,7 @@ export const WalletProvider = ({ children }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [contractInitialized, setContractInitialized] = useState(false)
+  const [demoMode, setDemoMode] = useState(false)
 
   // Check if wallet is already connected on app load
   useEffect(() => {
@@ -252,7 +253,9 @@ export const WalletProvider = ({ children }) => {
     contractInitialized,
     connectWallet,
     disconnectWallet,
-    switchToTestnet
+    switchToTestnet,
+    demoMode,
+    setDemoMode
   }
 
   return (
