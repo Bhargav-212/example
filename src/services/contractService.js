@@ -1,5 +1,6 @@
 import { ethers } from 'ethers'
 import { CONTRACT_ABI, getContractConfig } from '../config/contract'
+import { getChecksumAddress, isValidAddress } from '../utils/addressUtils'
 
 class ContractService {
   constructor() {
@@ -15,8 +16,16 @@ class ContractService {
       this.signer = signer
       
       const config = getContractConfig(chainId)
+
+      // Validate and checksum the contract address
+      if (!isValidAddress(config.contractAddress)) {
+        throw new Error(`Invalid contract address in configuration: ${config.contractAddress}`)
+      }
+
+      const checksummedAddress = getChecksumAddress(config.contractAddress)
+
       this.contract = new ethers.Contract(
-        config.contractAddress,
+        checksummedAddress,
         CONTRACT_ABI,
         signer
       )
