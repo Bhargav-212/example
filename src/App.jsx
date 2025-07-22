@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { WalletProvider } from './contexts/WalletContext'
 import { ToastProvider } from './components/ui/Toast'
 import DashboardLayout from './components/layout/DashboardLayout'
@@ -9,7 +9,9 @@ import Activity from './pages/Activity'
 import Chat from './pages/Chat'
 
 const App = () => {
-  const renderPage = (currentPage) => {
+  const [currentPage, setCurrentPage] = useState('overview')
+
+  const renderPage = () => {
     switch (currentPage) {
       case 'overview':
         return <Overview />
@@ -29,7 +31,7 @@ const App = () => {
   return (
     <ToastProvider>
       <WalletProvider>
-        <DashboardLayout>
+        <DashboardLayout currentPage={currentPage} onPageChange={setCurrentPage}>
           {renderPage()}
         </DashboardLayout>
       </WalletProvider>

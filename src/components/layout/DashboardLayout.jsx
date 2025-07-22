@@ -1,14 +1,12 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { motion } from 'framer-motion'
 import Sidebar from './Sidebar'
 import Header from './Header'
 
-const DashboardLayout = ({ children }) => {
-  const [currentPage, setCurrentPage] = useState('overview')
-  
+const DashboardLayout = ({ children, currentPage, onPageChange }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-midnight-950 via-midnight-900 to-midnight-800">
-      <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
+      <Sidebar currentPage={currentPage} onPageChange={onPageChange} />
       
       <div className="lg:ml-64 flex flex-col min-h-screen">
         <Header currentPage={currentPage} />
@@ -21,7 +19,7 @@ const DashboardLayout = ({ children }) => {
             transition={{ duration: 0.3 }}
             className="max-w-7xl mx-auto"
           >
-            {React.cloneElement(children, { currentPage, onPageChange: setCurrentPage })}
+            {children}
           </motion.div>
         </main>
       </div>
