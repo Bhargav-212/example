@@ -8,6 +8,7 @@ import {
 import GlassCard from './GlassCard'
 import { useWallet } from '../../contexts/WalletContext'
 import { getContractConfig } from '../../config/contract'
+import { isValidAddress } from '../../utils/addressUtils'
 
 const IntegrationStatus = () => {
   const { isConnected, address, chainId, contractInitialized } = useWallet()
@@ -29,15 +30,24 @@ const IntegrationStatus = () => {
   
   const getContractStatus = () => {
     if (!isConnected) return { status: 'disconnected', message: 'Wallet not connected' }
-    if (!contractInitialized) return { status: 'error', message: 'Contract initialization failed' }
-    
+
     const config = getContractConfig(chainId)
-    const isExampleAddress = config.contractAddress === '0x742d35Cc6506C4A9E6D29F0f9F5a8dF07c9c31a5'
-    
+
+    // Check if address is valid
+    if (!isValidAddress(config.contractAddress)) {
+      return { status: 'error', message: 'Invalid contract address' }
+    }
+
+    // Check if using example address
+    const isExampleAddress = config.contractAddress.toLowerCase() === '0x742d35cc6506c4a9e6d29f0f9f5a8df07c9c31a5'
     if (isExampleAddress) {
       return { status: 'warning', message: 'Using example contract address' }
     }
-    
+
+    if (!contractInitialized) {
+      return { status: 'error', message: 'Contract initialization failed' }
+    }
+
     return { status: 'success', message: 'Contract connected' }
   }
   
