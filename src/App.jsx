@@ -1,13 +1,36 @@
 import React from 'react'
+import { WalletProvider } from './contexts/WalletContext'
+import DashboardLayout from './components/layout/DashboardLayout'
+import Overview from './pages/Overview'
+import Upload from './pages/Upload'
+import Access from './pages/Access'
+import Activity from './pages/Activity'
+import Chat from './pages/Chat'
 
-function App() {
+const App = () => {
+  const renderPage = (currentPage) => {
+    switch (currentPage) {
+      case 'overview':
+        return <Overview />
+      case 'upload':
+        return <Upload />
+      case 'access':
+        return <Access />
+      case 'activity':
+        return <Activity />
+      case 'chat':
+        return <Chat />
+      default:
+        return <Overview />
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">SecureX Futuristic Landing Page</h1>
-        <p className="text-xl text-gray-300">Project is now running successfully!</p>
-      </div>
-    </div>
+    <WalletProvider>
+      <DashboardLayout>
+        {renderPage()}
+      </DashboardLayout>
+    </WalletProvider>
   )
 }
 
