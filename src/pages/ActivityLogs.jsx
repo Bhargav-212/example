@@ -8,7 +8,7 @@ import {
   ArrowDownTrayIcon,
   UserIcon,
   MagnifyingGlassIcon,
-  FilterIcon,
+  FunnelIcon,
   CalendarIcon,
   LinkIcon
 } from '@heroicons/react/24/outline'
@@ -243,7 +243,7 @@ const ActivityLogs = () => {
           
           {/* Filter */}
           <div className="flex items-center space-x-2">
-            <FilterIcon className="w-5 h-5 text-gray-400" />
+            <FunnelIcon className="w-5 h-5 text-gray-400" />
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
