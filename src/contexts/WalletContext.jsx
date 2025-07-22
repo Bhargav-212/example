@@ -41,7 +41,6 @@ export const WalletProvider = ({ children }) => {
           setAddress(address)
           setChainId(network.chainId)
           setIsConnected(true)
-          setError('')
         }
       } catch (error) {
         console.error('Error checking wallet connection:', error)
@@ -78,7 +77,7 @@ export const WalletProvider = ({ children }) => {
       setIsConnected(true)
       setError('')
 
-      console.log('Wallet connected successfully:', address)
+      console.log('Wallet connected:', address)
 
     } catch (error) {
       console.error('Error connecting wallet:', error)
@@ -106,6 +105,88 @@ export const WalletProvider = ({ children }) => {
     setChainId(null)
     setError('')
     console.log('Wallet disconnected')
+  }
+
+  const addSepoliaNetwork = async () => {
+    if (!window.ethereum) return false
+
+    try {
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: '0xaa36a7',
+          chainName: 'Sepolia Testnet',
+          nativeCurrency: {
+            name: 'Sepolia ETH',
+            symbol: 'SEP',
+            decimals: 18
+          },
+          rpcUrls: ['https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'],
+          blockExplorerUrls: ['https://sepolia.etherscan.io/']
+        }]
+      })
+      return true
+    } catch (error) {
+      console.error('Error adding Sepolia network:', error)
+      return false
+    }
+  }
+
+  const addGoerliNetwork = async () => {
+    if (!window.ethereum) return false
+
+    try {
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: '0x5',
+          chainName: 'Goerli Testnet',
+          nativeCurrency: {
+            name: 'Goerli ETH',
+            symbol: 'gETH',
+            decimals: 18
+          },
+          rpcUrls: ['https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'],
+          blockExplorerUrls: ['https://goerli.etherscan.io/']
+        }]
+      })
+      return true
+    } catch (error) {
+      console.error('Error adding Goerli network:', error)
+      return false
+    }
+  }
+
+  const switchToTestnet = async (testnet = 'sepolia') => {
+    if (!window.ethereum) return false
+
+    setLoading(true)
+    try {
+      const chainId = testnet === 'sepolia' ? '0xaa36a7' : '0x5'
+      
+      // Try to switch to the network
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId }],
+      })
+      
+      console.log(`Switched to ${testnet} testnet successfully`)
+      return true
+    } catch (error) {
+      // If the network doesn't exist, add it
+      if (error.code === 4902) {
+        const added = testnet === 'sepolia' ? 
+          await addSepoliaNetwork() : 
+          await addGoerliNetwork()
+        return added
+      } else {
+        console.error(`Error switching to ${testnet}:`, error)
+        setError(`Failed to switch to ${testnet} testnet`)
+        return false
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   // Listen for account and chain changes
@@ -147,7 +228,8 @@ export const WalletProvider = ({ children }) => {
     loading,
     error,
     connectWallet,
-    disconnectWallet
+    disconnectWallet,
+    switchToTestnet
   }
 
   return (

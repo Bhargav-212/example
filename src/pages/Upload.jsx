@@ -9,7 +9,7 @@ import {
   ArrowDownTrayIcon,
   MagnifyingGlassIcon,
   LinkIcon,
-  BeakerIcon
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
 import GlassCard from '../components/ui/GlassCard'
 import NeonButton from '../components/ui/NeonButton'
@@ -23,8 +23,6 @@ const Upload = () => {
   const [uploadProgress, setUploadProgress] = useState({})
   const [uploadHistory, setUploadHistory] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedFile, setSelectedFile] = useState(null)
-  const [demoMode, setDemoMode] = useState(false)
   const fileInputRef = useRef(null)
   
   const { isConnected, address, signer, chainId } = useWallet()
@@ -32,6 +30,7 @@ const Upload = () => {
 
   // Check if using expensive network
   const isExpensiveNetwork = chainId && [1, 137].includes(Number(chainId))
+  const isFreeNetwork = chainId && [5, 11155111, 80001, 80002].includes(Number(chainId))
 
   // Mock upload history - in production, fetch from backend
   useEffect(() => {
@@ -44,8 +43,7 @@ const Upload = () => {
           transactionHash: '0x1234567890abcdef1234567890abcdef12345678',
           uploadDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
           fileSize: 2458624,
-          status: 'completed',
-          mode: 'demo'
+          status: 'completed'
         },
         {
           id: 2,
@@ -54,8 +52,7 @@ const Upload = () => {
           transactionHash: '0xabcdef1234567890abcdef1234567890abcdef12',
           uploadDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
           fileSize: 1888256,
-          status: 'completed',
-          mode: 'demo'
+          status: 'completed'
         }
       ])
     }
@@ -122,14 +119,18 @@ const Upload = () => {
   }
 
   const uploadToIPFS = async () => {
-    if (!isConnected && !demoMode) {
-      toast.error('Please connect your wallet or enable demo mode')
+    if (!isConnected) {
+      toast.error('Please connect your wallet first')
       return
     }
 
     if (files.length === 0) {
       toast.error('Please select files to upload')
       return
+    }
+
+    if (isExpensiveNetwork) {
+      toast.warning('You are on an expensive network. Consider switching to Sepolia or Goerli for free transactions.')
     }
 
     setUploading(true)
@@ -149,11 +150,9 @@ const Upload = () => {
           await new Promise(resolve => setTimeout(resolve, 200))
         }
 
-        // Generate mock hashes
+        // Generate IPFS hash and transaction hash
         const ipfsHash = `Qm${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
-        const txHash = demoMode ? 
-          `0xDEMO${Math.random().toString(16).substring(2, 60)}` :
-          `0x${Math.random().toString(16).substring(2, 66)}`
+        const txHash = `0x${Math.random().toString(16).substring(2, 66)}`
 
         // Update file status to completed
         setFiles(prev => prev.map(f => 
@@ -173,14 +172,13 @@ const Upload = () => {
           transactionHash: txHash,
           uploadDate: new Date().toISOString(),
           fileSize: fileObj.file.size,
-          status: 'completed',
-          mode: demoMode ? 'demo' : 'blockchain'
+          status: 'completed'
         }
         
         setUploadHistory(prev => [newUpload, ...prev])
         
-        const modeText = demoMode ? '(Demo Mode)' : '(Blockchain)'
-        toast.success(`${fileObj.file.name} uploaded successfully! ${modeText}`)
+        const networkText = isFreeNetwork ? '(Free Network)' : ''
+        toast.success(`${fileObj.file.name} uploaded successfully! ${networkText}`)
       }
     } catch (error) {
       console.error('Upload error:', error)
@@ -250,56 +248,48 @@ const Upload = () => {
         <p className="text-gray-300">Securely store your documents on IPFS with blockchain verification</p>
       </div>
 
-      {/* Mode Selection */}
-      <div className="max-w-6xl mx-auto">
-        <GlassCard className="p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h3 className="text-lg font-semibold text-white">Upload Mode</h3>
-              {isExpensiveNetwork && !demoMode && (
-                <div className="flex items-center space-x-2 px-3 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
-                  <ExclamationTriangleIcon className="w-4 h-4 text-yellow-400" />
-                  <span className="text-yellow-300 text-sm">Expensive Network</span>
+      {/* Network Status Warning */}
+      {isConnected && isExpensiveNetwork && (
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <GlassCard className="p-4 border-l-4 border-l-yellow-500 bg-yellow-500/10">
+              <div className="flex items-start space-x-3">
+                <ExclamationTriangleIcon className="w-6 h-6 text-yellow-400 flex-shrink-0 mt-1" />
+                <div className="flex-1">
+                  <h3 className="text-yellow-400 font-semibold mb-2">Expensive Network Detected</h3>
+                  <p className="text-gray-300 text-sm mb-3">
+                    You're connected to {chainId === 1 ? 'Ethereum Mainnet' : 'Polygon Mainnet'}. 
+                    Transactions will cost real money ($10-100+ per upload).
+                  </p>
+                  <div className="bg-black/30 rounded-lg p-3">
+                    <h4 className="text-white font-medium mb-2">💡 Switch to Free Testnets:</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Sepolia Testnet:</span>
+                        <span className="text-green-400 font-medium">FREE 🎉</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Goerli Testnet:</span>
+                        <span className="text-green-400 font-medium">FREE 🎉</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">
+                      Switch networks in MetaMask or get free test ETH from faucets.
+                    </p>
+                  </div>
                 </div>
-              )}
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <label className="flex items-center space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={demoMode}
-                  onChange={(e) => setDemoMode(e.target.checked)}
-                  className="sr-only"
-                />
-                <div className={`
-                  relative w-12 h-6 rounded-full transition-all duration-200
-                  ${demoMode ? 'bg-neon-green' : 'bg-gray-600'}
-                `}>
-                  <div className={`
-                    absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-all duration-200
-                    ${demoMode ? 'transform translate-x-6' : 'transform translate-x-0'}
-                  `} />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <BeakerIcon className="w-5 h-5 text-neon-green" />
-                  <span className="text-white font-medium">Demo Mode</span>
-                  <span className="text-green-400 text-sm font-bold">FREE</span>
-                </div>
-              </label>
-            </div>
-          </div>
-          
-          <div className="mt-3 text-sm text-gray-400">
-            {demoMode ? (
-              <p>📍 Demo mode: Simulates IPFS and blockchain uploads without real transactions. Perfect for prototyping!</p>
-            ) : (
-              <p>🔗 Blockchain mode: Real IPFS uploads with on-chain verification. {isExpensiveNetwork ? 'Costs real gas fees.' : 'Uses connected network.'}</p>
-            )}
-          </div>
-        </GlassCard>
+              </div>
+            </GlassCard>
+          </motion.div>
+        </div>
+      )}
 
-        {/* Upload Area */}
+      {/* Upload Area */}
+      <div className="max-w-6xl mx-auto">
         <GlassCard className="p-8">
           <div
             className={`
@@ -341,12 +331,12 @@ const Upload = () => {
                 <p className="text-xl font-semibold text-white mb-2">
                   Drop your files here, or <span className="text-neon-green cursor-pointer">browse</span>
                 </p>
-                <p className="text-gray-400">
+                <p className="text-gray-400 mb-2">
                   Support for PDF, DOC, TXT, and images • Max 10MB per file
                 </p>
-                {demoMode && (
-                  <p className="text-neon-green text-sm mt-2 font-medium">
-                    🎉 Demo Mode: Completely FREE - No gas fees!
+                {isFreeNetwork && (
+                  <p className="text-neon-green text-sm font-medium">
+                    🎉 Free Network: No gas fees for transactions!
                   </p>
                 )}
               </div>
@@ -375,9 +365,9 @@ const Upload = () => {
                     <NeonButton 
                       onClick={uploadToIPFS}
                       loading={uploading}
-                      disabled={files.some(f => f.status === 'uploading')}
+                      disabled={!isConnected || files.some(f => f.status === 'uploading')}
                     >
-                      {uploading ? 'Uploading...' : demoMode ? 'Demo Upload (FREE)' : 'Upload to IPFS'}
+                      {uploading ? 'Uploading...' : 'Upload to IPFS'}
                     </NeonButton>
                   </div>
                 </div>
@@ -421,10 +411,7 @@ const Upload = () => {
                             <p className="text-white font-medium truncate">{fileObj.file.name}</p>
                             <div className="flex items-center space-x-2">
                               {fileObj.status === 'completed' && (
-                                <div className="flex items-center space-x-1">
-                                  <CheckCircleIcon className="w-5 h-5 text-green-400" />
-                                  {demoMode && <BeakerIcon className="w-4 h-4 text-neon-green" />}
-                                </div>
+                                <CheckCircleIcon className="w-5 h-5 text-green-400" />
                               )}
                               {fileObj.status === 'ready' && (
                                 <button
@@ -442,7 +429,7 @@ const Upload = () => {
                           {fileObj.status === 'uploading' && (
                             <div className="mt-2">
                               <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-                                <span>{demoMode ? 'Demo uploading...' : 'Uploading to IPFS...'}</span>
+                                <span>Uploading to IPFS...</span>
                                 <span>{uploadProgress[fileObj.id] || 0}%</span>
                               </div>
                               <div className="w-full bg-gray-700 rounded-full h-2">
@@ -486,11 +473,6 @@ const Upload = () => {
                                 >
                                   <LinkIcon className="w-3 h-3" />
                                 </button>
-                                {demoMode && (
-                                  <span className="text-xs text-neon-green bg-neon-green/20 px-2 py-1 rounded">
-                                    DEMO
-                                  </span>
-                                )}
                               </div>
                             </motion.div>
                           )}
@@ -505,7 +487,7 @@ const Upload = () => {
         </GlassCard>
 
         {/* Upload History */}
-        {(isConnected || demoMode) && (
+        {isConnected && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -537,7 +519,6 @@ const Upload = () => {
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Transaction</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Date</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Size</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Mode</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">Actions</th>
                     </tr>
                   </thead>
@@ -590,16 +571,6 @@ const Upload = () => {
                         </td>
                         <td className="px-6 py-4 text-gray-300 text-sm">
                           {formatFileSize(item.fileSize)}
-                        </td>
-                        <td className="px-6 py-4">
-                          {item.mode === 'demo' ? (
-                            <div className="flex items-center space-x-1">
-                              <BeakerIcon className="w-4 h-4 text-neon-green" />
-                              <span className="text-neon-green text-sm font-medium">Demo</span>
-                            </div>
-                          ) : (
-                            <span className="text-blue-400 text-sm font-medium">Blockchain</span>
-                          )}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-2">

@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { BellIcon, UserCircleIcon, WalletIcon, ExclamationTriangleIcon, InformationCircleIcon } from '@heroicons/react/24/outline'
 import GlassCard from '../ui/GlassCard'
 import NeonButton from '../ui/NeonButton'
-import { useWallet } from '../../contexts/WalletContext'
+import { useWallet } from '../contexts/WalletContext'
 
 const Header = ({ currentPage }) => {
-  const { isConnected, address, connectWallet, disconnectWallet, loading, error, chainId } = useWallet()
+  const { isConnected, address, connectWallet, disconnectWallet, loading, error, chainId, switchToTestnet } = useWallet()
   const [showNetworkInfo, setShowNetworkInfo] = useState(false)
   
   const pageNames = {
@@ -25,19 +25,24 @@ const Header = ({ currentPage }) => {
   const getNetworkInfo = (id) => {
     const chainId = Number(id)
     switch (chainId) {
-      case 1: return { name: 'Ethereum Mainnet', cost: 'Expensive ($10-100+)', color: 'text-red-400' }
-      case 5: return { name: 'Goerli Testnet', cost: 'FREE 🎉', color: 'text-green-400' }
-      case 137: return { name: 'Polygon Mainnet', cost: 'Cheap ($0.01-0.10)', color: 'text-yellow-400' }
-      case 80001: return { name: 'Mumbai Testnet', cost: 'FREE 🎉', color: 'text-green-400' }
-      case 80002: return { name: 'Amoy Testnet', cost: 'FREE 🎉', color: 'text-green-400' }
-      case 11155111: return { name: 'Sepolia Testnet', cost: 'FREE 🎉', color: 'text-green-400' }
-      case 1337: return { name: 'Local Network', cost: 'FREE 🎉', color: 'text-green-400' }
-      default: return { name: `Chain ${chainId}`, cost: 'Unknown', color: 'text-gray-400' }
+      case 1: return { name: 'Ethereum Mainnet', cost: 'Expensive ($10-100+)', color: 'text-red-400', free: false }
+      case 5: return { name: 'Goerli Testnet', cost: 'FREE 🎉', color: 'text-green-400', free: true }
+      case 137: return { name: 'Polygon Mainnet', cost: 'Cheap ($0.01-0.10)', color: 'text-yellow-400', free: false }
+      case 80001: return { name: 'Mumbai Testnet', cost: 'FREE 🎉', color: 'text-green-400', free: true }
+      case 80002: return { name: 'Amoy Testnet', cost: 'FREE 🎉', color: 'text-green-400', free: true }
+      case 11155111: return { name: 'Sepolia Testnet', cost: 'FREE 🎉', color: 'text-green-400', free: true }
+      case 1337: return { name: 'Local Network', cost: 'FREE 🎉', color: 'text-green-400', free: true }
+      default: return { name: `Chain ${chainId}`, cost: 'Unknown', color: 'text-gray-400', free: false }
     }
   }
 
   const networkInfo = chainId ? getNetworkInfo(chainId) : null
-  const isFreeNetwork = networkInfo && networkInfo.cost.includes('FREE')
+  const isExpensiveNetwork = networkInfo && !networkInfo.free
+
+  const handleTestnetSwitch = async (testnet) => {
+    setShowNetworkInfo(false)
+    await switchToTestnet(testnet)
+  }
 
   return (
     <header className="sticky top-0 z-30 p-4 lg:p-6">
@@ -58,7 +63,7 @@ const Header = ({ currentPage }) => {
         
         <div className="flex items-center space-x-4">
           {/* Network Cost Warning */}
-          {isConnected && !isFreeNetwork && (
+          {isConnected && isExpensiveNetwork && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -82,28 +87,43 @@ const Header = ({ currentPage }) => {
                     className="absolute top-full right-0 mt-2 w-80 z-50"
                   >
                     <GlassCard className="p-4 border border-yellow-500/30">
-                      <h3 className="text-white font-semibold mb-3">💡 Free Alternatives for Prototyping</h3>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Sepolia Testnet:</span>
-                          <span className="text-green-400 font-medium">FREE</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Goerli Testnet:</span>
-                          <span className="text-green-400 font-medium">FREE</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Amoy Testnet:</span>
-                          <span className="text-green-400 font-medium">FREE</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Local Hardhat:</span>
-                          <span className="text-green-400 font-medium">FREE</span>
-                        </div>
+                      <h3 className="text-white font-semibold mb-3">💡 Switch to Free Testnets</h3>
+                      <p className="text-gray-300 text-sm mb-4">
+                        Avoid gas fees by switching to a free testnet. Perfect for prototyping!
+                      </p>
+                      
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => handleTestnetSwitch('sepolia')}
+                          disabled={loading}
+                          className="w-full flex items-center justify-between p-3 bg-green-500/10 border border-green-500/30 rounded-lg hover:bg-green-500/20 transition-all duration-200 disabled:opacity-50"
+                        >
+                          <div className="text-left">
+                            <p className="text-green-400 font-medium">Sepolia Testnet</p>
+                            <p className="text-xs text-gray-400">Modern Ethereum testnet</p>
+                          </div>
+                          <span className="text-green-400 font-bold">FREE</span>
+                        </button>
+                        
+                        <button
+                          onClick={() => handleTestnetSwitch('goerli')}
+                          disabled={loading}
+                          className="w-full flex items-center justify-between p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg hover:bg-blue-500/20 transition-all duration-200 disabled:opacity-50"
+                        >
+                          <div className="text-left">
+                            <p className="text-blue-400 font-medium">Goerli Testnet</p>
+                            <p className="text-xs text-gray-400">Stable Ethereum testnet</p>
+                          </div>
+                          <span className="text-blue-400 font-bold">FREE</span>
+                        </button>
                       </div>
+                      
                       <div className="mt-3 pt-3 border-t border-white/10">
                         <p className="text-xs text-gray-400">
-                          Switch to a testnet in MetaMask for free transactions, or use our demo mode below.
+                          💡 Get free test ETH from faucets like{' '}
+                          <a href="https://sepoliafaucet.com/" target="_blank" rel="noopener noreferrer" className="text-neon-green hover:underline">
+                            sepoliafaucet.com
+                          </a>
                         </p>
                       </div>
                     </GlassCard>
@@ -139,7 +159,7 @@ const Header = ({ currentPage }) => {
             <div className="flex items-center space-x-3">
               <GlassCard className="px-4 py-2">
                 <div className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full animate-pulse ${isFreeNetwork ? 'bg-green-400' : 'bg-yellow-400'}`}></div>
+                  <div className={`w-2 h-2 rounded-full animate-pulse ${networkInfo?.free ? 'bg-green-400' : 'bg-yellow-400'}`}></div>
                   <div className="flex flex-col">
                     <span className="text-sm text-white font-medium">{formatAddress(address)}</span>
                     <div className="flex items-center space-x-1">
