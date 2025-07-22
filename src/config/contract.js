@@ -1,3 +1,5 @@
+import { safeGetChecksumAddress } from '../utils/addressUtils'
+
 // SecureX Smart Contract Configuration
 export const CONTRACT_CONFIG = {
   // Sepolia Testnet Configuration
@@ -100,15 +102,30 @@ export const CONTRACT_ABI = [
 // Helper function to get contract config based on chain ID
 export const getContractConfig = (chainId) => {
   const chainIdNum = Number(chainId)
-  
+
+  let config
   switch (chainIdNum) {
     case 11155111:
-      return CONTRACT_CONFIG.sepolia
+      config = CONTRACT_CONFIG.sepolia
+      break
     case 5:
-      return CONTRACT_CONFIG.goerli
+      config = CONTRACT_CONFIG.goerli
+      break
     default:
       // Default to Sepolia if unknown network
-      return CONTRACT_CONFIG.sepolia
+      config = CONTRACT_CONFIG.sepolia
+      break
+  }
+
+  // Ensure the contract address is properly checksummed
+  const checksummedAddress = safeGetChecksumAddress(config.contractAddress)
+  if (!checksummedAddress) {
+    console.warn(`Invalid contract address for chain ${chainIdNum}: ${config.contractAddress}`)
+  }
+
+  return {
+    ...config,
+    contractAddress: checksummedAddress || config.contractAddress
   }
 }
 
