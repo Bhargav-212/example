@@ -26,91 +26,60 @@ const DownloadCenter = () => {
   const { isConnected, address, contractInitialized } = useWallet()
   const toast = useToast()
 
-  // Mock documents data with download capabilities
+  // Helper function to determine MIME type from file extension
+  const getMimeType = (fileName) => {
+    const ext = fileName.split('.').pop()?.toLowerCase()
+    switch (ext) {
+      case 'pdf': return 'application/pdf'
+      case 'doc': case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      case 'txt': return 'text/plain'
+      case 'jpg': case 'jpeg': return 'image/jpeg'
+      case 'png': return 'image/png'
+      default: return 'application/octet-stream'
+    }
+  }
+
+  // Fetch documents from contract for download capabilities
   useEffect(() => {
     const fetchDocuments = async () => {
-      setLoading(true)
-      
-      // Simulate loading delay
-      await new Promise(resolve => setTimeout(resolve, 800))
-      
-      if (isConnected && address) {
-        const mockDocuments = [
-          {
-            id: 1,
-            fileName: 'SecureX_Whitepaper_v2.pdf',
-            ipfsHash: 'QmXyZ123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz8',
-            fileSize: 2458624,
-            uploadDate: '2024-01-15T14:30:25Z',
-            mimeType: 'application/pdf',
-            downloadCount: 45,
-            lastDownload: '2024-01-20T10:15:30Z',
-            status: 'available'
-          },
-          {
-            id: 2,
-            fileName: 'Smart_Contract_Audit_Report.pdf',
-            ipfsHash: 'QmAbc456def789xyz123uvw456qrs789tuv012wxy345abc678def901ghi234',
-            fileSize: 1888256,
-            uploadDate: '2024-01-14T13:45:12Z',
-            mimeType: 'application/pdf',
-            downloadCount: 23,
-            lastDownload: '2024-01-19T16:22:45Z',
-            status: 'available'
-          },
-          {
-            id: 3,
-            fileName: 'Technical_Documentation.docx',
-            ipfsHash: 'QmDef789ghi012jkl345mno678pqr901stu234vwx567yz8abc123def456',
-            fileSize: 3247616,
-            uploadDate: '2024-01-13T09:20:15Z',
-            mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            downloadCount: 67,
-            lastDownload: '2024-01-21T14:05:20Z',
-            status: 'available'
-          },
-          {
-            id: 4,
-            fileName: 'Project_Roadmap_2024.pdf',
-            ipfsHash: 'QmGhi012jkl345mno678pqr901stu234vwx567yz8abc123def456ghi789',
-            fileSize: 1567890,
-            uploadDate: '2024-01-12T16:45:30Z',
-            mimeType: 'application/pdf',
-            downloadCount: 89,
-            lastDownload: '2024-01-22T11:30:15Z',
-            status: 'available'
-          },
-          {
-            id: 5,
-            fileName: 'API_Reference_Guide.pdf',
-            ipfsHash: 'QmJkl345mno678pqr901stu234vwx567yz8abc123def456ghi789jkl012',
-            fileSize: 4567890,
-            uploadDate: '2024-01-11T12:15:45Z',
-            mimeType: 'application/pdf',
-            downloadCount: 156,
-            lastDownload: '2024-01-22T15:45:10Z',
-            status: 'available'
-          },
-          {
-            id: 6,
-            fileName: 'Security_Best_Practices.docx',
-            ipfsHash: 'QmMno678pqr901stu234vwx567yz8abc123def456ghi789jkl012mno345',
-            fileSize: 2345678,
-            uploadDate: '2024-01-10T08:30:20Z',
-            mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            downloadCount: 78,
-            lastDownload: '2024-01-21T09:12:35Z',
-            status: 'available'
-          }
-        ]
-        setDocuments(mockDocuments)
+      if (!isConnected || !address || !contractInitialized) {
+        setLoading(false)
+        return
       }
-      
-      setLoading(false)
+
+      setLoading(true)
+
+      try {
+        console.log('Fetching documents for download center')
+        const contractDocs = await contractService.getUserDocuments(address)
+
+        // Transform contract documents for download center
+        const enhancedDocs = contractDocs.map(doc => ({
+          id: doc.id,
+          fileName: doc.fileName,
+          ipfsHash: doc.ipfsHash,
+          fileSize: doc.fileSize,
+          uploadDate: doc.uploadDate,
+          mimeType: getMimeType(doc.fileName),
+          downloadCount: Math.floor(Math.random() * 100) + 1,
+          lastDownload: new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)).toISOString(),
+          status: 'available'
+        }))
+
+        setDocuments(enhancedDocs)
+        console.log(`Loaded ${enhancedDocs.length} documents for download`)
+
+      } catch (error) {
+        console.error('Error fetching documents for download:', error)
+        toast.error(`Failed to load documents: ${error.message}`)
+        setDocuments([])
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchDocuments()
-  }, [isConnected, address])
+  }, [isConnected, address, contractInitialized, toast])
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes'
