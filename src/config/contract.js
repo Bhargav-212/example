@@ -6,8 +6,8 @@ export const CONTRACT_CONFIG = {
     name: 'Sepolia Testnet',
     rpcUrl: 'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
     blockExplorer: 'https://sepolia.etherscan.io',
-    // Replace with your deployed contract address
-    contractAddress: '0x742d35Cc6506C4A9E6D29F0f9F5a8dF07c9c31a5', // Example address - update with yours
+    // Replace with your deployed contract address (use proper checksum format)
+    contractAddress: '0x742d35Cc6506C4A9E6D29F0f9F5a8dF07c9c31A5', // Example address - update with yours
   },
   // Goerli Testnet Configuration
   goerli: {
@@ -15,7 +15,7 @@ export const CONTRACT_CONFIG = {
     name: 'Goerli Testnet', 
     rpcUrl: 'https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
     blockExplorer: 'https://goerli.etherscan.io',
-    contractAddress: '0x742d35Cc6506C4A9E6D29F0f9F5a8dF07c9c31a5', // Example address - update with yours
+    contractAddress: '0x742d35Cc6506C4A9E6D29F0f9F5a8dF07c9c31A5', // Example address - update with yours
   }
 }
 
