@@ -27,7 +27,7 @@ const Upload = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const fileInputRef = useRef(null)
   
-  const { isConnected, address, signer, chainId, contractInitialized } = useWallet()
+  const { isConnected, address, signer, chainId, contractInitialized, demoMode } = useWallet()
   const toast = useToast()
 
   // Check if using expensive network
@@ -125,8 +125,8 @@ const Upload = () => {
       return
     }
 
-    if (!contractInitialized) {
-      toast.error('Smart contract not initialized. Please update the contract address in src/config/contract.js with your deployed contract address.')
+    if (!contractInitialized && !demoMode) {
+      toast.error('Smart contract not initialized. Please update the contract address in src/config/contract.js with your deployed contract address, or enable demo mode.')
       return
     }
 
@@ -165,15 +165,28 @@ const Upload = () => {
             throw new Error('IPFS upload failed')
           }
 
-          // Step 2: Upload to blockchain
+          // Step 2: Upload to blockchain (or simulate in demo mode)
           console.log('Uploading to blockchain:', ipfsResult.hash)
           setUploadProgress(prev => ({ ...prev, [fileObj.id]: 70 }))
 
-          const contractResult = await contractService.uploadDocument(
-            fileObj.file.name,
-            ipfsResult.hash,
-            fileObj.file.size
-          )
+          let contractResult
+          if (demoMode) {
+            // Simulate blockchain upload in demo mode
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            contractResult = {
+              success: true,
+              transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`,
+              blockNumber: Math.floor(Math.random() * 1000000) + 4890000,
+              documentId: Math.floor(Math.random() * 1000) + 1,
+              gasUsed: (Math.floor(Math.random() * 50000) + 100000).toString()
+            }
+          } else {
+            contractResult = await contractService.uploadDocument(
+              fileObj.file.name,
+              ipfsResult.hash,
+              fileObj.file.size
+            )
+          }
 
           setUploadProgress(prev => ({ ...prev, [fileObj.id]: 100 }))
 
@@ -202,7 +215,8 @@ const Upload = () => {
           setUploadHistory(prev => [newUpload, ...prev])
 
           const networkText = isFreeNetwork ? ' (Free Network)' : ''
-          toast.success(`${fileObj.file.name} uploaded successfully!${networkText}`)
+          const modeText = demoMode ? ' (Demo Mode)' : ''
+          toast.success(`${fileObj.file.name} uploaded successfully!${networkText}${modeText}`)
 
         } catch (error) {
           console.error(`Upload failed for ${fileObj.file.name}:`, error)
@@ -404,7 +418,7 @@ const Upload = () => {
                     <NeonButton
                       onClick={uploadToIPFS}
                       loading={uploading}
-                      disabled={!isConnected || !contractInitialized || files.some(f => f.status === 'uploading')}
+                      disabled={!isConnected || (!contractInitialized && !demoMode) || files.some(f => f.status === 'uploading')}
                     >
                       {uploading ? 'Uploading...' : 'Upload to Blockchain'}
                     </NeonButton>
