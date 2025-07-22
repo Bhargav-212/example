@@ -12,9 +12,12 @@ const Header = ({ currentPage }) => {
   const pageNames = {
     overview: 'Dashboard Overview',
     upload: 'Upload Documents',
+    recent: 'Recent Documents',
     access: 'Access Files',
     activity: 'Activity Logs',
-    chat: 'AI Assistant'
+    download: 'Download Center',
+    chat: 'AI Document Chat',
+    control: 'Access Control'
   }
   
   const formatAddress = (addr) => {

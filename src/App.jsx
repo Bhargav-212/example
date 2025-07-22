@@ -4,9 +4,12 @@ import { ToastProvider } from './components/ui/Toast'
 import DashboardLayout from './components/layout/DashboardLayout'
 import Overview from './pages/Overview'
 import Upload from './pages/Upload'
+import RecentDocuments from './pages/RecentDocuments'
 import Access from './pages/Access'
-import Activity from './pages/Activity'
-import Chat from './pages/Chat'
+import ActivityLogs from './pages/ActivityLogs'
+import DownloadCenter from './pages/DownloadCenter'
+import AIDocumentChat from './pages/AIDocumentChat'
+import AccessControl from './pages/AccessControl'
 
 const App = () => {
   const [currentPage, setCurrentPage] = useState('overview')
@@ -17,12 +20,18 @@ const App = () => {
         return <Overview />
       case 'upload':
         return <Upload />
+      case 'recent':
+        return <RecentDocuments />
       case 'access':
         return <Access />
       case 'activity':
-        return <Activity />
+        return <ActivityLogs />
+      case 'download':
+        return <DownloadCenter />
       case 'chat':
-        return <Chat />
+        return <AIDocumentChat />
+      case 'control':
+        return <AccessControl />
       default:
         return <Overview />
     }
