@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { ethers } from 'ethers'
+import contractService from '../services/contractService'
 
 const WalletContext = createContext()
 
@@ -19,6 +20,7 @@ export const WalletProvider = ({ children }) => {
   const [chainId, setChainId] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [contractInitialized, setContractInitialized] = useState(false)
 
   // Check if wallet is already connected on app load
   useEffect(() => {
@@ -41,6 +43,10 @@ export const WalletProvider = ({ children }) => {
           setAddress(address)
           setChainId(network.chainId)
           setIsConnected(true)
+
+          // Initialize contract service
+          const initialized = await contractService.initialize(provider, signer, network.chainId)
+          setContractInitialized(initialized)
         }
       } catch (error) {
         console.error('Error checking wallet connection:', error)
@@ -77,6 +83,16 @@ export const WalletProvider = ({ children }) => {
       setIsConnected(true)
       setError('')
 
+      // Initialize contract service
+      const initialized = await contractService.initialize(provider, signer, network.chainId)
+      setContractInitialized(initialized)
+
+      if (initialized) {
+        console.log('Wallet connected and contract initialized:', address)
+      } else {
+        console.log('Wallet connected but contract initialization failed:', address)
+      }
+
       console.log('Wallet connected:', address)
 
     } catch (error) {
@@ -104,6 +120,11 @@ export const WalletProvider = ({ children }) => {
     setSigner(null)
     setChainId(null)
     setError('')
+    setContractInitialized(false)
+
+    // Clean up contract service
+    contractService.removeEventListeners()
+
     console.log('Wallet disconnected')
   }
 
@@ -203,6 +224,7 @@ export const WalletProvider = ({ children }) => {
 
       const handleChainChanged = (chainId) => {
         setChainId(BigInt(chainId))
+        setContractInitialized(false)
         // Reload connection after chain change
         setTimeout(checkConnection, 100)
       }
@@ -227,6 +249,7 @@ export const WalletProvider = ({ children }) => {
     chainId,
     loading,
     error,
+    contractInitialized,
     connectWallet,
     disconnectWallet,
     switchToTestnet
