@@ -7,11 +7,12 @@ import {
 } from '@heroicons/react/24/outline'
 import GlassCard from './GlassCard'
 import { useWallet } from '../../contexts/WalletContext'
+import NeonButton from './NeonButton'
 import { getContractConfig } from '../../config/contract'
 import { isValidAddress } from '../../utils/addressUtils'
 
 const IntegrationStatus = () => {
-  const { isConnected, address, chainId, contractInitialized } = useWallet()
+  const { isConnected, address, chainId, contractInitialized, demoMode, setDemoMode } = useWallet()
   
   const getNetworkStatus = () => {
     if (!chainId) return { status: 'disconnected', message: 'No network detected' }
@@ -140,24 +141,48 @@ const IntegrationStatus = () => {
         </div>
       </div>
       
-      {/* Setup Instructions */}
+      {/* Setup Instructions or Demo Mode */}
       {(!contractInitialized || contractStatus.status === 'warning') && (
-        <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-          <div className="flex items-start space-x-3">
-            <ExclamationTriangleIcon className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <h4 className="text-yellow-400 font-medium mb-1">Setup Required</h4>
-              <p className="text-sm text-gray-300 mb-2">
-                To connect to your deployed smart contract:
-              </p>
-              <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
-                <li>Update contract address in <code className="text-yellow-400">src/config/contract.js</code></li>
-                <li>Ensure your contract implements the required ABI</li>
-                <li>Connect MetaMask to Sepolia or Goerli testnet</li>
-                <li>Check <code className="text-yellow-400">CONTRACT_SETUP.md</code> for details</li>
-              </ol>
+        <div className="mt-4 space-y-3">
+          {/* Demo Mode Toggle */}
+          <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h4 className="text-blue-400 font-medium mb-1">🚀 Quick Start - Demo Mode</h4>
+                <p className="text-sm text-gray-300">
+                  Test uploads immediately without deploying a smart contract
+                </p>
+              </div>
+              <NeonButton
+                onClick={() => setDemoMode(!demoMode)}
+                variant={demoMode ? "default" : "outline"}
+                size="sm"
+              >
+                {demoMode ? '✅ Demo Active' : 'Enable Demo'}
+              </NeonButton>
             </div>
           </div>
+
+          {/* Contract Setup Instructions */}
+          {!demoMode && (
+            <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+              <div className="flex items-start space-x-3">
+                <ExclamationTriangleIcon className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="text-yellow-400 font-medium mb-1">Contract Setup Required</h4>
+                  <p className="text-sm text-gray-300 mb-2">
+                    To connect to your deployed smart contract:
+                  </p>
+                  <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
+                    <li>Update contract address in <code className="text-yellow-400">src/config/contract.js</code></li>
+                    <li>Ensure your contract implements the required ABI</li>
+                    <li>Connect MetaMask to Sepolia or Goerli testnet</li>
+                    <li>Check <code className="text-yellow-400">CONTRACT_SETUP.md</code> for details</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
       
