@@ -19,6 +19,7 @@ import {
 } from 'recharts'
 import StatCard from '../components/ui/StatCard'
 import GlassCard from '../components/ui/GlassCard'
+import IntegrationStatus from '../components/ui/IntegrationStatus'
 
 const Overview = () => {
   // Mock data for charts
