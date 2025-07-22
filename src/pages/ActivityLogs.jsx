@@ -16,13 +16,16 @@ import GlassCard from '../components/ui/GlassCard'
 import NeonButton from '../components/ui/NeonButton'
 import { useWallet } from '../contexts/WalletContext'
 import { useToast } from '../components/ui/Toast'
+import contractService from '../services/contractService'
+import { getContractConfig } from '../config/contract'
 
 const ActivityLogs = () => {
   const [activities, setActivities] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('all')
-  const { isConnected, address, chainId } = useWallet()
+  const [error, setError] = useState('')
+  const { isConnected, address, chainId, contractInitialized } = useWallet()
   const toast = useToast()
 
   // Mock Sepolia contract events - in production, this would fetch from contract logs
