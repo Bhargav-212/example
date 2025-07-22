@@ -126,7 +126,7 @@ const Upload = () => {
     }
 
     if (!contractInitialized) {
-      toast.error('Smart contract not initialized. Please check your network connection.')
+      toast.error('Smart contract not initialized. Please update the contract address in src/config/contract.js with your deployed contract address.')
       return
     }
 
