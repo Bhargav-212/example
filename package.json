@@ -10,11 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.4",
+    "@heroicons/react": "^2.2.0",
+    "@web3modal/ethers": "^5.1.11",
     "axios": "^1.9.0",
+    "clsx": "^2.1.1",
     "ethers": "^6.15.0",
+    "framer-motion": "^12.23.6",
     "lucide-react": "^0.511.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "recharts": "^3.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.27.0",
