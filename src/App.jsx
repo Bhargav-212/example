@@ -1,5 +1,6 @@
 import React from 'react'
 import { WalletProvider } from './contexts/WalletContext'
+import { ToastProvider } from './components/ui/Toast'
 import DashboardLayout from './components/layout/DashboardLayout'
 import Overview from './pages/Overview'
 import Upload from './pages/Upload'
@@ -26,11 +27,13 @@ const App = () => {
   }
 
   return (
-    <WalletProvider>
-      <DashboardLayout>
-        {renderPage()}
-      </DashboardLayout>
-    </WalletProvider>
+    <ToastProvider>
+      <WalletProvider>
+        <DashboardLayout>
+          {renderPage()}
+        </DashboardLayout>
+      </WalletProvider>
+    </ToastProvider>
   )
 }
 

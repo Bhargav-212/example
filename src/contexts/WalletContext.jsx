@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { ethers } from 'ethers'
+import { useToast } from '../components/ui/Toast'
 
 const WalletContext = createContext()
 
@@ -19,6 +20,7 @@ export const WalletProvider = ({ children }) => {
   const [chainId, setChainId] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const toast = useToast()
 
   // Check if wallet is already connected on app load
   useEffect(() => {
@@ -50,7 +52,9 @@ export const WalletProvider = ({ children }) => {
 
   const connectWallet = async () => {
     if (typeof window.ethereum === 'undefined') {
-      setError('MetaMask is not installed. Please install MetaMask to continue.')
+      const errorMsg = 'MetaMask is not installed. Please install MetaMask to continue.'
+      setError(errorMsg)
+      toast.error(errorMsg)
       return
     }
 
@@ -60,7 +64,7 @@ export const WalletProvider = ({ children }) => {
     try {
       // Request account access
       await window.ethereum.request({ method: 'eth_requestAccounts' })
-      
+
       const provider = new ethers.BrowserProvider(window.ethereum)
       const signer = await provider.getSigner()
       const address = await signer.getAddress()
@@ -72,35 +76,45 @@ export const WalletProvider = ({ children }) => {
       setChainId(network.chainId)
       setIsConnected(true)
 
+      toast.success(`Wallet connected: ${address.slice(0, 6)}...${address.slice(-4)}`)
+
       // Switch to Polygon Mumbai testnet if not already connected
-      try {
-        await window.ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0x13881' }], // Mumbai testnet
-        })
-      } catch (switchError) {
-        // If the chain doesn't exist, add it
-        if (switchError.code === 4902) {
+      if (network.chainId !== 80001n) {
+        try {
           await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-              chainId: '0x13881',
-              chainName: 'Polygon Mumbai',
-              nativeCurrency: {
-                name: 'MATIC',
-                symbol: 'MATIC',
-                decimals: 18
-              },
-              rpcUrls: ['https://rpc-mumbai.maticvigil.com/'],
-              blockExplorerUrls: ['https://mumbai.polygonscan.com/']
-            }]
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x13881' }], // Mumbai testnet
           })
+          toast.success('Switched to Polygon Mumbai testnet')
+        } catch (switchError) {
+          // If the chain doesn't exist, add it
+          if (switchError.code === 4902) {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0x13881',
+                chainName: 'Polygon Mumbai',
+                nativeCurrency: {
+                  name: 'MATIC',
+                  symbol: 'MATIC',
+                  decimals: 18
+                },
+                rpcUrls: ['https://rpc-mumbai.maticvigil.com/'],
+                blockExplorerUrls: ['https://mumbai.polygonscan.com/']
+              }]
+            })
+            toast.success('Added and switched to Polygon Mumbai testnet')
+          } else {
+            toast.warning('Please switch to Polygon Mumbai for full functionality')
+          }
         }
       }
 
     } catch (error) {
       console.error('Error connecting wallet:', error)
-      setError(error.message || 'Failed to connect wallet')
+      const errorMsg = error.message || 'Failed to connect wallet'
+      setError(errorMsg)
+      toast.error(errorMsg)
     } finally {
       setLoading(false)
     }
@@ -113,6 +127,7 @@ export const WalletProvider = ({ children }) => {
     setSigner(null)
     setChainId(null)
     setError('')
+    toast.info('Wallet disconnected')
   }
 
   const switchNetwork = async (targetChainId) => {
@@ -123,9 +138,12 @@ export const WalletProvider = ({ children }) => {
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: `0x${targetChainId.toString(16)}` }],
       })
+      toast.success('Network switched successfully')
     } catch (error) {
       console.error('Error switching network:', error)
-      setError('Failed to switch network')
+      const errorMsg = 'Failed to switch network'
+      setError(errorMsg)
+      toast.error(errorMsg)
     }
   }
 
