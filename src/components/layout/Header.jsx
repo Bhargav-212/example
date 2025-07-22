@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { BellIcon, UserCircleIcon, WalletIcon, ExclamationTriangleIcon, InformationCircleIcon } from '@heroicons/react/24/outline'
 import GlassCard from '../ui/GlassCard'
 import NeonButton from '../ui/NeonButton'
-import { useWallet } from '../contexts/WalletContext'
+import { useWallet } from '../../contexts/WalletContext'
 
 const Header = ({ currentPage }) => {
   const { isConnected, address, connectWallet, disconnectWallet, loading, error, chainId, switchToTestnet } = useWallet()
