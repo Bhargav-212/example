@@ -15,13 +15,15 @@ import GlassCard from '../components/ui/GlassCard'
 import NeonButton from '../components/ui/NeonButton'
 import { useWallet } from '../contexts/WalletContext'
 import { useToast } from '../components/ui/Toast'
+import contractService from '../services/contractService'
+import ipfsService from '../services/ipfsService'
 
 const DownloadCenter = () => {
   const [documents, setDocuments] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [downloadStatus, setDownloadStatus] = useState({})
   const [loading, setLoading] = useState(true)
-  const { isConnected, address } = useWallet()
+  const { isConnected, address, contractInitialized } = useWallet()
   const toast = useToast()
 
   // Mock documents data with download capabilities
