@@ -15,6 +15,8 @@ import GlassCard from '../components/ui/GlassCard'
 import NeonButton from '../components/ui/NeonButton'
 import { useWallet } from '../contexts/WalletContext'
 import { useToast } from '../components/ui/Toast'
+import contractService from '../services/contractService'
+import ipfsService from '../services/ipfsService'
 
 const Upload = () => {
   const [dragActive, setDragActive] = useState(false)
@@ -25,38 +27,37 @@ const Upload = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const fileInputRef = useRef(null)
   
-  const { isConnected, address, signer, chainId } = useWallet()
+  const { isConnected, address, signer, chainId, contractInitialized } = useWallet()
   const toast = useToast()
 
   // Check if using expensive network
   const isExpensiveNetwork = chainId && [1, 137].includes(Number(chainId))
   const isFreeNetwork = chainId && [5, 11155111, 80001, 80002].includes(Number(chainId))
 
-  // Mock upload history - in production, fetch from backend
+  // Load upload history from contract
   useEffect(() => {
-    if (isConnected && address) {
-      setUploadHistory([
-        {
-          id: 1,
-          name: 'Project_Whitepaper.pdf',
-          ipfsHash: 'QmXyZ123abc456def789ghi012jkl345mno678pqr',
-          transactionHash: '0x1234567890abcdef1234567890abcdef12345678',
-          uploadDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          fileSize: 2458624,
-          status: 'completed'
-        },
-        {
-          id: 2,
-          name: 'Smart_Contract_Audit.pdf',
-          ipfsHash: 'QmAbc456def789xyz123uvw456qrs789tuv012wxy',
-          transactionHash: '0xabcdef1234567890abcdef1234567890abcdef12',
-          uploadDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          fileSize: 1888256,
-          status: 'completed'
+    const loadUploadHistory = async () => {
+      if (isConnected && address && contractInitialized) {
+        try {
+          const documents = await contractService.getUserDocuments(address)
+          const history = documents.map(doc => ({
+            id: doc.id,
+            name: doc.fileName,
+            ipfsHash: doc.ipfsHash,
+            transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`, // Mock tx hash for display
+            uploadDate: doc.uploadDate,
+            fileSize: doc.fileSize,
+            status: 'completed'
+          }))
+          setUploadHistory(history)
+        } catch (error) {
+          console.error('Error loading upload history:', error)
         }
-      ])
+      }
     }
-  }, [isConnected, address])
+
+    loadUploadHistory()
+  }, [isConnected, address, contractInitialized])
 
   const handleDrag = (e) => {
     e.preventDefault()
@@ -124,6 +125,11 @@ const Upload = () => {
       return
     }
 
+    if (!contractInitialized) {
+      toast.error('Smart contract not initialized. Please check your network connection.')
+      return
+    }
+
     if (files.length === 0) {
       toast.error('Please select files to upload')
       return
@@ -140,45 +146,78 @@ const Upload = () => {
         if (fileObj.status !== 'ready') continue
 
         // Update file status to uploading
-        setFiles(prev => prev.map(f => 
+        setFiles(prev => prev.map(f =>
           f.id === fileObj.id ? { ...f, status: 'uploading' } : f
         ))
 
-        // Simulate IPFS upload progress
-        for (let progress = 0; progress <= 100; progress += 10) {
-          setUploadProgress(prev => ({ ...prev, [fileObj.id]: progress }))
-          await new Promise(resolve => setTimeout(resolve, 200))
+        try {
+          // Step 1: Upload to IPFS
+          console.log('Uploading to IPFS:', fileObj.file.name)
+
+          const ipfsResult = await ipfsService.uploadFile(
+            fileObj.file,
+            (progress) => {
+              setUploadProgress(prev => ({ ...prev, [fileObj.id]: Math.floor(progress * 0.7) }))
+            }
+          )
+
+          if (!ipfsResult.success) {
+            throw new Error('IPFS upload failed')
+          }
+
+          // Step 2: Upload to blockchain
+          console.log('Uploading to blockchain:', ipfsResult.hash)
+          setUploadProgress(prev => ({ ...prev, [fileObj.id]: 70 }))
+
+          const contractResult = await contractService.uploadDocument(
+            fileObj.file.name,
+            ipfsResult.hash,
+            fileObj.file.size
+          )
+
+          setUploadProgress(prev => ({ ...prev, [fileObj.id]: 100 }))
+
+          // Update file status to completed
+          setFiles(prev => prev.map(f =>
+            f.id === fileObj.id ? {
+              ...f,
+              status: 'completed',
+              ipfsHash: ipfsResult.hash,
+              transactionHash: contractResult.transactionHash,
+              documentId: contractResult.documentId
+            } : f
+          ))
+
+          // Add to upload history
+          const newUpload = {
+            id: contractResult.documentId || Date.now() + Math.random(),
+            name: fileObj.file.name,
+            ipfsHash: ipfsResult.hash,
+            transactionHash: contractResult.transactionHash,
+            uploadDate: new Date().toISOString(),
+            fileSize: fileObj.file.size,
+            status: 'completed'
+          }
+
+          setUploadHistory(prev => [newUpload, ...prev])
+
+          const networkText = isFreeNetwork ? ' (Free Network)' : ''
+          toast.success(`${fileObj.file.name} uploaded successfully!${networkText}`)
+
+        } catch (error) {
+          console.error(`Upload failed for ${fileObj.file.name}:`, error)
+
+          // Update file status to failed
+          setFiles(prev => prev.map(f =>
+            f.id === fileObj.id ? {
+              ...f,
+              status: 'failed',
+              error: error.message
+            } : f
+          ))
+
+          toast.error(`Failed to upload ${fileObj.file.name}: ${error.message}`)
         }
-
-        // Generate IPFS hash and transaction hash
-        const ipfsHash = `Qm${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
-        const txHash = `0x${Math.random().toString(16).substring(2, 66)}`
-
-        // Update file status to completed
-        setFiles(prev => prev.map(f => 
-          f.id === fileObj.id ? { 
-            ...f, 
-            status: 'completed',
-            ipfsHash,
-            transactionHash: txHash
-          } : f
-        ))
-
-        // Add to upload history
-        const newUpload = {
-          id: Date.now() + Math.random(),
-          name: fileObj.file.name,
-          ipfsHash,
-          transactionHash: txHash,
-          uploadDate: new Date().toISOString(),
-          fileSize: fileObj.file.size,
-          status: 'completed'
-        }
-        
-        setUploadHistory(prev => [newUpload, ...prev])
-        
-        const networkText = isFreeNetwork ? '(Free Network)' : ''
-        toast.success(`${fileObj.file.name} uploaded successfully! ${networkText}`)
       }
     } catch (error) {
       console.error('Upload error:', error)
@@ -362,12 +401,12 @@ const Upload = () => {
                     >
                       Clear All
                     </NeonButton>
-                    <NeonButton 
+                    <NeonButton
                       onClick={uploadToIPFS}
                       loading={uploading}
-                      disabled={!isConnected || files.some(f => f.status === 'uploading')}
+                      disabled={!isConnected || !contractInitialized || files.some(f => f.status === 'uploading')}
                     >
-                      {uploading ? 'Uploading...' : 'Upload to IPFS'}
+                      {uploading ? 'Uploading...' : 'Upload to Blockchain'}
                     </NeonButton>
                   </div>
                 </div>
@@ -381,10 +420,12 @@ const Upload = () => {
                       exit={{ opacity: 0, scale: 0.95 }}
                       className={`
                         relative p-4 rounded-xl border transition-all duration-300
-                        ${fileObj.status === 'completed' 
-                          ? 'bg-green-500/10 border-green-500/30' 
+                        ${fileObj.status === 'completed'
+                          ? 'bg-green-500/10 border-green-500/30'
                           : fileObj.status === 'uploading'
                           ? 'bg-neon-green/10 border-neon-green/30'
+                          : fileObj.status === 'failed'
+                          ? 'bg-red-500/10 border-red-500/30'
                           : 'bg-white/5 border-white/10 hover:border-white/20'
                         }
                       `}
@@ -429,7 +470,9 @@ const Upload = () => {
                           {fileObj.status === 'uploading' && (
                             <div className="mt-2">
                               <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-                                <span>Uploading to IPFS...</span>
+                                <span>
+                                  {(uploadProgress[fileObj.id] || 0) < 70 ? 'Uploading to IPFS...' : 'Uploading to blockchain...'}
+                                </span>
                                 <span>{uploadProgress[fileObj.id] || 0}%</span>
                               </div>
                               <div className="w-full bg-gray-700 rounded-full h-2">
@@ -440,6 +483,15 @@ const Upload = () => {
                                   transition={{ duration: 0.3 }}
                                 />
                               </div>
+                            </div>
+                          )}
+
+                          {/* Error Display */}
+                          {fileObj.status === 'failed' && (
+                            <div className="mt-2 p-2 bg-red-500/10 border border-red-500/30 rounded">
+                              <p className="text-xs text-red-400">
+                                ✗ Upload failed: {fileObj.error || 'Unknown error'}
+                              </p>
                             </div>
                           )}
 
