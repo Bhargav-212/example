@@ -41,6 +41,7 @@ export const WalletProvider = ({ children }) => {
           setAddress(address)
           setChainId(network.chainId)
           setIsConnected(true)
+          setError('')
         }
       } catch (error) {
         console.error('Error checking wallet connection:', error)
@@ -77,7 +78,7 @@ export const WalletProvider = ({ children }) => {
       setIsConnected(true)
       setError('')
 
-      console.log('Wallet connected:', address)
+      console.log('Wallet connected successfully:', address)
 
     } catch (error) {
       console.error('Error connecting wallet:', error)
@@ -105,49 +106,6 @@ export const WalletProvider = ({ children }) => {
     setChainId(null)
     setError('')
     console.log('Wallet disconnected')
-  }
-
-  const switchNetwork = async (targetChainId) => {
-    if (!window.ethereum) return
-
-    setLoading(true)
-    try {
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: `0x${targetChainId.toString(16)}` }],
-      })
-      console.log('Network switched successfully')
-    } catch (error) {
-      console.error('Error switching network:', error)
-      
-      // If the chain doesn't exist, add it
-      if (error.code === 4902 && targetChainId === 80001) {
-        try {
-          await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-              chainId: '0x13881',
-              chainName: 'Polygon Mumbai',
-              nativeCurrency: {
-                name: 'MATIC',
-                symbol: 'MATIC',
-                decimals: 18
-              },
-              rpcUrls: ['https://rpc-mumbai.maticvigil.com/'],
-              blockExplorerUrls: ['https://mumbai.polygonscan.com/']
-            }]
-          })
-          console.log('Network added and switched successfully')
-        } catch (addError) {
-          console.error('Error adding network:', addError)
-          setError('Failed to add network')
-        }
-      } else {
-        setError('Failed to switch network')
-      }
-    } finally {
-      setLoading(false)
-    }
   }
 
   // Listen for account and chain changes
@@ -189,8 +147,7 @@ export const WalletProvider = ({ children }) => {
     loading,
     error,
     connectWallet,
-    disconnectWallet,
-    switchNetwork
+    disconnectWallet
   }
 
   return (

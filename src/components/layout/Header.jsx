@@ -6,7 +6,7 @@ import NeonButton from '../ui/NeonButton'
 import { useWallet } from '../../contexts/WalletContext'
 
 const Header = ({ currentPage }) => {
-  const { isConnected, address, connectWallet, disconnectWallet, loading, error, chainId, switchNetwork } = useWallet()
+  const { isConnected, address, connectWallet, disconnectWallet, loading, error, chainId } = useWallet()
   
   const pageNames = {
     overview: 'Dashboard Overview',
@@ -22,15 +22,17 @@ const Header = ({ currentPage }) => {
   }
 
   const getNetworkName = (id) => {
-    switch (Number(id)) {
-      case 1: return 'Ethereum'
-      case 137: return 'Polygon'
-      case 80001: return 'Mumbai'
-      default: return `Chain ${id?.toString()}`
+    const chainId = Number(id)
+    switch (chainId) {
+      case 1: return 'Ethereum Mainnet'
+      case 5: return 'Goerli Testnet'
+      case 137: return 'Polygon Mainnet'
+      case 80001: return 'Mumbai Testnet'
+      case 80002: return 'Amoy Testnet'
+      case 11155111: return 'Sepolia Testnet'
+      default: return `Chain ${chainId}`
     }
   }
-
-  const isCorrectNetwork = chainId === 80001n
 
   return (
     <header className="sticky top-0 z-30 p-4 lg:p-6">
@@ -51,14 +53,14 @@ const Header = ({ currentPage }) => {
         
         <div className="flex items-center space-x-4">
           {/* Error Display */}
-          {error && (
+          {error && !loading && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center space-x-2 px-3 py-2 bg-red-500/20 border border-red-500/30 rounded-lg"
+              className="flex items-center space-x-2 px-3 py-2 bg-red-500/20 border border-red-500/30 rounded-lg max-w-xs"
             >
-              <ExclamationTriangleIcon className="w-4 h-4 text-red-400" />
-              <span className="text-red-300 text-sm">{error}</span>
+              <ExclamationTriangleIcon className="w-4 h-4 text-red-400 flex-shrink-0" />
+              <span className="text-red-300 text-sm truncate">{error}</span>
             </motion.div>
           )}
 
@@ -79,18 +81,7 @@ const Header = ({ currentPage }) => {
                   <div className="w-2 h-2 bg-neon-green rounded-full animate-pulse"></div>
                   <div className="flex flex-col">
                     <span className="text-sm text-white font-medium">{formatAddress(address)}</span>
-                    <div className="flex items-center space-x-1">
-                      <span className="text-xs text-gray-400">{getNetworkName(chainId)}</span>
-                      {!isCorrectNetwork && (
-                        <button
-                          onClick={() => switchNetwork(80001)}
-                          className="text-xs text-yellow-400 hover:text-yellow-300 underline"
-                          disabled={loading}
-                        >
-                          Switch to Mumbai
-                        </button>
-                      )}
-                    </div>
+                    <span className="text-xs text-gray-400">{getNetworkName(chainId)}</span>
                   </div>
                 </div>
               </GlassCard>
