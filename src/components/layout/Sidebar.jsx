@@ -1,10 +1,8 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  HomeIcon, 
-  CloudArrowUpIcon, 
-  DocumentIcon,
-  ClockIcon,
+import {
+  HomeIcon,
+  CloudArrowUpIcon,
   ChatBubbleLeftRightIcon,
   Bars3Icon,
   XMarkIcon,
@@ -22,8 +20,6 @@ const Sidebar = ({ currentPage, onPageChange, className = '' }) => {
     { id: 'overview', name: 'Overview', icon: HomeIcon },
     { id: 'upload', name: 'Upload', icon: CloudArrowUpIcon },
     { id: 'recent', name: 'Recent Documents', icon: FolderOpenIcon },
-    { id: 'access', name: 'Access Files', icon: DocumentIcon },
-    { id: 'activity', name: 'Activity Logs', icon: ClockIcon },
     { id: 'download', name: 'Download Center', icon: ArrowDownTrayIcon },
     { id: 'chat', name: 'AI Document Chat', icon: ChatBubbleLeftRightIcon },
     { id: 'control', name: 'Access Control', icon: ShieldCheckIcon }
