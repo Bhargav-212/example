@@ -94,6 +94,15 @@ const Overview = () => {
       {/* Integration Status */}
       <IntegrationStatus />
 
+      {/* Free Blockchain Setup */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <FreeBlockchainSetup />
+      </motion.div>
+
       {/* Contract Setup Helper */}
       {needsContractSetup() && (
         <motion.div
