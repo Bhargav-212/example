@@ -8,6 +8,7 @@ import RecentDocuments from './pages/RecentDocuments'
 import DownloadCenter from './pages/DownloadCenter'
 import AIDocumentChat from './pages/AIDocumentChat'
 import AccessControl from './pages/AccessControl'
+import MetaMaskHelper from './components/ui/MetaMaskHelper'
 
 const App = () => {
   const [currentPage, setCurrentPage] = useState('overview')
