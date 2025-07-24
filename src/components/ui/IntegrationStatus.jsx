@@ -126,50 +126,49 @@ const IntegrationStatus = () => {
         </div>
       </div>
       
-      {/* Setup Instructions or Demo Mode */}
-      {(!contractInitialized || contractStatus.status === 'warning') && (
-        <div className="mt-4 space-y-3">
-          {/* Demo Mode Toggle */}
-          <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h4 className="text-blue-400 font-medium mb-1">🚀 Quick Start - Demo Mode</h4>
-                <p className="text-sm text-gray-300">
-                  Test uploads immediately without deploying a smart contract
-                </p>
-              </div>
-              <NeonButton
-                onClick={() => setDemoMode(!demoMode)}
-                variant={demoMode ? "default" : "outline"}
-                size="sm"
-              >
-                {demoMode ? '✅ Demo Active' : 'Enable Demo'}
-              </NeonButton>
-            </div>
-          </div>
-
-          {/* Contract Setup Instructions */}
-          {!demoMode && (
-            <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-              <div className="flex items-start space-x-3">
-                <ExclamationTriangleIcon className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <h4 className="text-yellow-400 font-medium mb-1">Contract Setup Required</h4>
-                  <p className="text-sm text-gray-300 mb-2">
-                    To connect to your deployed smart contract:
-                  </p>
-                  <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
-                    <li>Update contract address in <code className="text-yellow-400">src/config/contract.js</code></li>
-                    <li>Ensure your contract implements the required ABI</li>
-                    <li>Connect MetaMask to Sepolia or Goerli testnet</li>
-                    <li>Check <code className="text-yellow-400">CONTRACT_SETUP.md</code> for details</li>
-                  </ol>
+      {/* Free Edition Information */}
+      <div className="mt-4 space-y-3">
+        {/* Storage Usage */}
+        <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+          <div className="flex items-start space-x-3">
+            <CheckCircleIcon className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="text-green-400 font-medium mb-1">✨ Free Edition Features</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-300">
+                <div>
+                  <p className="font-medium text-white">Storage Limits:</p>
+                  <ul className="space-y-1">
+                    <li>• Up to {storageStats.documentsLimit} documents</li>
+                    <li>• 10MB max file size</li>
+                    <li>• Local browser storage</li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-medium text-white">Current Usage:</p>
+                  <ul className="space-y-1">
+                    <li>• {storageStats.documentsUsed} documents stored</li>
+                    <li>• {storageStats.documentsRemaining} slots remaining</li>
+                    <li>• {(storageStats.totalSizeUsed / 1024 / 1024).toFixed(2)}MB used</li>
+                  </ul>
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
-      )}
+
+        {/* No Setup Required */}
+        <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <StarIcon className="w-5 h-5 text-blue-400 flex-shrink-0" />
+            <div className="flex-1">
+              <h4 className="text-blue-400 font-medium mb-1">🚀 Ready to Use</h4>
+              <p className="text-sm text-gray-300">
+                No blockchain setup, no IPFS costs, no backend required. Start uploading documents immediately!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
       
       {/* Address Display */}
       {isConnected && address && (
