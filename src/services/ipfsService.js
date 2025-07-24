@@ -5,11 +5,21 @@ class IPFSService {
     this.defaultGateway = IPFS_CONFIG.gateways[0]
   }
 
-  // Upload file to IPFS (mock implementation for demo)
+  // Upload file to IPFS (production-ready with fallback to demo)
   async uploadFile(file, onProgress = null) {
+    // Check if production IPFS is configured
+    const pinataApiKey = import.meta.env.VITE_PINATA_API_KEY
+    const pinataSecret = import.meta.env.VITE_PINATA_SECRET
+
+    if (pinataApiKey && pinataSecret) {
+      // Use real IPFS upload
+      return this.uploadToPinata(file, pinataApiKey, pinataSecret)
+    }
+
+    // Fallback to demo mode
     try {
-      console.log('Uploading file to IPFS:', file.name)
-      
+      console.log('Using demo mode - file upload simulation:', file.name)
+
       // Simulate upload progress
       if (onProgress) {
         for (let progress = 0; progress <= 100; progress += 10) {
@@ -17,30 +27,20 @@ class IPFSService {
           await new Promise(resolve => setTimeout(resolve, 200))
         }
       }
-      
+
       // Generate mock IPFS hash based on file content
-      const fileBuffer = await file.arrayBuffer()
-      const hashInput = new Uint8Array(fileBuffer)
-      
-      // Simple hash generation for demo (in production use real IPFS upload)
-      let hash = 'Qm'
-      const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-      for (let i = 0; i < 44; i++) {
-        hash += chars.charAt(Math.floor(Math.random() * chars.length))
-      }
-      
-      // Add some deterministic elements based on file
       const fileHash = await this.generateFileHash(file)
-      hash = `Qm${fileHash}${Math.random().toString(36).substr(2, 20)}`
-      
-      console.log('File uploaded to IPFS:', hash)
-      
+      const hash = `QmDemo${fileHash}${Math.random().toString(36).substr(2, 15)}`
+
+      console.log('Demo file uploaded with hash:', hash)
+
       return {
         success: true,
         hash,
         size: file.size,
         name: file.name,
-        type: file.type
+        type: file.type,
+        demoMode: true
       }
     } catch (error) {
       console.error('IPFS upload failed:', error)

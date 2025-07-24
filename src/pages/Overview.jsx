@@ -21,6 +21,7 @@ import StatCard from '../components/ui/StatCard'
 import GlassCard from '../components/ui/GlassCard'
 import IntegrationStatus from '../components/ui/IntegrationStatus'
 import ContractAddressValidator from '../components/ui/ContractAddressValidator'
+import FreeBlockchainSetup from '../components/ui/FreeBlockchainSetup'
 import { useWallet } from '../contexts/WalletContext'
 import { getContractConfig } from '../config/contract'
 import { isValidAddress } from '../utils/addressUtils'
@@ -92,6 +93,15 @@ const Overview = () => {
 
       {/* Integration Status */}
       <IntegrationStatus />
+
+      {/* Free Blockchain Setup */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <FreeBlockchainSetup />
+      </motion.div>
 
       {/* Contract Setup Helper */}
       {needsContractSetup() && (

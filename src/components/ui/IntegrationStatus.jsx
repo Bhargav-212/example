@@ -1,59 +1,52 @@
 import React from 'react'
-import { 
-  CheckCircleIcon, 
-  ExclamationTriangleIcon, 
+import {
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
   XCircleIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  StarIcon
 } from '@heroicons/react/24/outline'
 import GlassCard from './GlassCard'
 import { useWallet } from '../../contexts/WalletContext'
 import NeonButton from './NeonButton'
 import { getContractConfig } from '../../config/contract'
 import { isValidAddress } from '../../utils/addressUtils'
+import { freeStorageService } from '../../services/freeStorageService'
 
 const IntegrationStatus = () => {
   const { isConnected, address, chainId, contractInitialized, demoMode, setDemoMode } = useWallet()
-  
-  const getNetworkStatus = () => {
-    if (!chainId) return { status: 'disconnected', message: 'No network detected' }
-    
-    const isSupportedNetwork = chainId === 11155111n || chainId === 5n // Sepolia or Goerli
-    
-    if (isSupportedNetwork) {
-      return { 
-        status: 'success', 
-        message: chainId === 11155111n ? 'Sepolia Testnet' : 'Goerli Testnet'
-      }
+
+  // Get storage statistics for Free Edition
+  const storageStats = freeStorageService.getStorageStats()
+  const storageAvailable = freeStorageService.isStorageAvailable()
+
+  const getFreeStorageStatus = () => {
+    if (!storageAvailable) {
+      return { status: 'error', message: 'Storage unavailable' }
     }
-    
-    return { status: 'warning', message: 'Unsupported network' }
+
+    const usagePercent = (storageStats.documentsUsed / storageStats.documentsLimit) * 100
+
+    if (usagePercent >= 90) {
+      return { status: 'warning', message: `${storageStats.documentsRemaining} slots left` }
+    }
+
+    return { status: 'success', message: `${storageStats.documentsUsed}/${storageStats.documentsLimit} used` }
+  }
+
+  const getBrowserStatus = () => {
+    const hasLocalStorage = typeof(Storage) !== "undefined"
+    const hasFileAPI = window.File && window.FileReader && window.FileList && window.Blob
+
+    if (hasLocalStorage && hasFileAPI) {
+      return { status: 'success', message: 'Fully compatible' }
+    }
+
+    return { status: 'warning', message: 'Limited features' }
   }
   
-  const getContractStatus = () => {
-    if (!isConnected) return { status: 'disconnected', message: 'Wallet not connected' }
-
-    const config = getContractConfig(chainId)
-
-    // Check if address is valid
-    if (!isValidAddress(config.contractAddress)) {
-      return { status: 'error', message: 'Invalid contract address' }
-    }
-
-    // Check if using example address
-    const isExampleAddress = config.contractAddress.toLowerCase() === '0x742d35cc6506c4a9e6d29f0f9f5a8df07c9c31a5'
-    if (isExampleAddress) {
-      return { status: 'warning', message: 'Using example contract address' }
-    }
-
-    if (!contractInitialized) {
-      return { status: 'error', message: 'Contract initialization failed' }
-    }
-
-    return { status: 'success', message: 'Contract connected' }
-  }
-  
-  const networkStatus = getNetworkStatus()
-  const contractStatus = getContractStatus()
+  const storageStatus = getFreeStorageStatus()
+  const browserStatus = getBrowserStatus()
   
   const StatusIcon = ({ status }) => {
     switch (status) {
@@ -86,105 +79,96 @@ const IntegrationStatus = () => {
   return (
     <GlassCard className="p-4 mb-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white mb-0">Integration Status</h3>
+        <div className="flex items-center space-x-2">
+          <StarIcon className="w-5 h-5 text-yellow-400" />
+          <h3 className="text-lg font-semibold text-white mb-0">SecureX Free Edition</h3>
+        </div>
         <div className="flex items-center space-x-1">
-          <StatusIcon status={isConnected && contractInitialized ? 'success' : 'warning'} />
+          <StatusIcon status={storageAvailable ? 'success' : 'warning'} />
           <span className="text-sm text-gray-300">
-            {isConnected && contractInitialized ? 'Ready' : 'Setup Required'}
+            {storageAvailable ? 'Ready' : 'Setup Required'}
           </span>
         </div>
       </div>
       
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Wallet Status */}
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Local Storage Status */}
         <div className="flex items-center space-x-3">
-          <StatusIcon status={isConnected ? 'success' : 'disconnected'} />
+          <StatusIcon status={storageStatus.status} />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white">Wallet</p>
-            <StatusBadge status={isConnected ? 'success' : 'disconnected'}>
-              {isConnected ? 'Connected' : 'Not Connected'}
+            <p className="text-sm font-medium text-white">Storage</p>
+            <StatusBadge status={storageStatus.status}>
+              {storageStatus.message}
             </StatusBadge>
           </div>
         </div>
-        
-        {/* Network Status */}
+
+        {/* Browser Compatibility */}
         <div className="flex items-center space-x-3">
-          <StatusIcon status={networkStatus.status} />
+          <StatusIcon status={browserStatus.status} />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white">Network</p>
-            <StatusBadge status={networkStatus.status}>
-              {networkStatus.message}
+            <p className="text-sm font-medium text-white">Browser</p>
+            <StatusBadge status={browserStatus.status}>
+              {browserStatus.message}
             </StatusBadge>
           </div>
         </div>
-        
-        {/* Contract Status */}
+
+        {/* Free Edition Features */}
         <div className="flex items-center space-x-3">
-          <StatusIcon status={contractStatus.status} />
+          <StatusIcon status="success" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white">Contract</p>
-            <StatusBadge status={contractStatus.status}>
-              {contractStatus.message}
-            </StatusBadge>
-          </div>
-        </div>
-        
-        {/* IPFS Status */}
-        <div className="flex items-center space-x-3">
-          <StatusIcon status="warning" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white">IPFS</p>
-            <StatusBadge status="warning">
-              Mock Mode
+            <p className="text-sm font-medium text-white">Features</p>
+            <StatusBadge status="success">
+              No Setup Required
             </StatusBadge>
           </div>
         </div>
       </div>
       
-      {/* Setup Instructions or Demo Mode */}
-      {(!contractInitialized || contractStatus.status === 'warning') && (
-        <div className="mt-4 space-y-3">
-          {/* Demo Mode Toggle */}
-          <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h4 className="text-blue-400 font-medium mb-1">🚀 Quick Start - Demo Mode</h4>
-                <p className="text-sm text-gray-300">
-                  Test uploads immediately without deploying a smart contract
-                </p>
-              </div>
-              <NeonButton
-                onClick={() => setDemoMode(!demoMode)}
-                variant={demoMode ? "default" : "outline"}
-                size="sm"
-              >
-                {demoMode ? '✅ Demo Active' : 'Enable Demo'}
-              </NeonButton>
-            </div>
-          </div>
-
-          {/* Contract Setup Instructions */}
-          {!demoMode && (
-            <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-              <div className="flex items-start space-x-3">
-                <ExclamationTriangleIcon className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <h4 className="text-yellow-400 font-medium mb-1">Contract Setup Required</h4>
-                  <p className="text-sm text-gray-300 mb-2">
-                    To connect to your deployed smart contract:
-                  </p>
-                  <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
-                    <li>Update contract address in <code className="text-yellow-400">src/config/contract.js</code></li>
-                    <li>Ensure your contract implements the required ABI</li>
-                    <li>Connect MetaMask to Sepolia or Goerli testnet</li>
-                    <li>Check <code className="text-yellow-400">CONTRACT_SETUP.md</code> for details</li>
-                  </ol>
+      {/* Free Edition Information */}
+      <div className="mt-4 space-y-3">
+        {/* Storage Usage */}
+        <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+          <div className="flex items-start space-x-3">
+            <CheckCircleIcon className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="text-green-400 font-medium mb-1">✨ Free Edition Features</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-300">
+                <div>
+                  <p className="font-medium text-white">Storage Limits:</p>
+                  <ul className="space-y-1">
+                    <li>• Up to {storageStats.documentsLimit} documents</li>
+                    <li>• 10MB max file size</li>
+                    <li>• Local browser storage</li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-medium text-white">Current Usage:</p>
+                  <ul className="space-y-1">
+                    <li>• {storageStats.documentsUsed} documents stored</li>
+                    <li>• {storageStats.documentsRemaining} slots remaining</li>
+                    <li>• {(storageStats.totalSizeUsed / 1024 / 1024).toFixed(2)}MB used</li>
+                  </ul>
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
-      )}
+
+        {/* No Setup Required */}
+        <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <StarIcon className="w-5 h-5 text-blue-400 flex-shrink-0" />
+            <div className="flex-1">
+              <h4 className="text-blue-400 font-medium mb-1">🚀 Ready to Use</h4>
+              <p className="text-sm text-gray-300">
+                No blockchain setup, no IPFS costs, no backend required. Start uploading documents immediately!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
       
       {/* Address Display */}
       {isConnected && address && (

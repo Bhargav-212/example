@@ -103,7 +103,7 @@ export const WalletProvider = ({ children }) => {
       if (error.code === 4001) {
         errorMsg = 'Connection rejected by user'
       } else if (error.code === -32002) {
-        errorMsg = 'Connection request already pending'
+        errorMsg = 'Connection request already pending. Please check MetaMask popup or refresh the page.'
       } else if (error.message) {
         errorMsg = error.message
       }
@@ -127,6 +127,12 @@ export const WalletProvider = ({ children }) => {
     contractService.removeEventListeners()
 
     console.log('Wallet disconnected')
+  }
+
+  const clearPendingRequest = () => {
+    setLoading(false)
+    setError('')
+    console.log('Cleared pending connection request')
   }
 
   const addSepoliaNetwork = async () => {
@@ -254,6 +260,7 @@ export const WalletProvider = ({ children }) => {
     connectWallet,
     disconnectWallet,
     switchToTestnet,
+    clearPendingRequest,
     demoMode,
     setDemoMode
   }
