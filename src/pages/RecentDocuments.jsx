@@ -234,7 +234,7 @@ const RecentDocuments = () => {
               key={doc.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: index * 0.05 }}
             >
               <GlassCard className="p-6 hover:bg-white/5 transition-all duration-300">
                 <div className="flex items-start justify-between mb-4">
