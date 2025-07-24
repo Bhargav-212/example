@@ -260,6 +260,7 @@ export const WalletProvider = ({ children }) => {
     connectWallet,
     disconnectWallet,
     switchToTestnet,
+    clearPendingRequest,
     demoMode,
     setDemoMode
   }
