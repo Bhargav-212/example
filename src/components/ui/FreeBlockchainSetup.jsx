@@ -320,32 +320,85 @@ contract SecureXDocuments {
           </p>
         </div>
 
-        {/* Progress Steps */}
-        <div className="flex items-center justify-between">
-          {steps.map((step, index) => (
-            <div key={step.id} className="flex items-center">
-              <div 
-                className={`
-                  w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300
-                  ${currentStep >= step.id 
-                    ? 'bg-neon-green text-gray-900' 
-                    : 'bg-white/10 text-gray-400'
-                  }
-                `}
-              >
-                {currentStep > step.id ? '✓' : step.id}
-              </div>
-              {index < steps.length - 1 && (
-                <div 
+        {/* Progress Steps or Completed Status */}
+        {!isCompleted ? (
+          <div className="flex items-center justify-between">
+            {steps.map((step, index) => (
+              <div key={step.id} className="flex items-center">
+                <div
                   className={`
-                    w-16 h-0.5 mx-2 transition-all duration-300
-                    ${currentStep > step.id ? 'bg-neon-green' : 'bg-white/20'}
+                    w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300
+                    ${currentStep >= step.id
+                      ? 'bg-neon-green text-gray-900'
+                      : 'bg-white/10 text-gray-400'
+                    }
                   `}
-                />
-              )}
+                >
+                  {currentStep > step.id ? '✓' : step.id}
+                </div>
+                {index < steps.length - 1 && (
+                  <div
+                    className={`
+                      w-16 h-0.5 mx-2 transition-all duration-300
+                      ${currentStep > step.id ? 'bg-neon-green' : 'bg-white/20'}
+                    `}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-6 bg-green-500/10 border border-green-500/30 rounded-lg text-center">
+            <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircleIcon className="w-10 h-10 text-green-400" />
             </div>
-          ))}
-        </div>
+            <h4 className="text-green-400 font-bold text-xl mb-3">🎉 Blockchain Setup Complete!</h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="p-4 bg-black/30 rounded-lg">
+                <h5 className="text-white font-medium mb-2">Your Contract</h5>
+                <p className="text-gray-400 text-sm mb-2">Deployed on Sepolia Testnet</p>
+                <code className="text-neon-green text-xs bg-black/50 px-2 py-1 rounded break-all">
+                  {contractAddress}
+                </code>
+                <div className="mt-2">
+                  <button
+                    onClick={() => window.open(`https://sepolia.etherscan.io/address/${contractAddress}`, '_blank')}
+                    className="text-blue-400 hover:text-blue-300 text-xs underline"
+                  >
+                    View on Etherscan →
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-4 bg-black/30 rounded-lg">
+                <h5 className="text-white font-medium mb-2">Next Steps</h5>
+                <ul className="text-gray-300 text-sm space-y-1">
+                  <li>✅ Contract deployed</li>
+                  <li>✅ Configuration updated</li>
+                  <li>🔄 Connect your wallet</li>
+                  <li>📄 Upload your first document</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded">
+                <p className="text-blue-400 text-sm font-medium mb-1">🚀 Ready to Use Blockchain Features</p>
+                <p className="text-gray-300 text-xs">
+                  Click "Connect Wallet" in the header, then go to Upload page to store documents on the blockchain!
+                </p>
+              </div>
+
+              <button
+                onClick={handleReset}
+                className="text-gray-400 hover:text-white text-sm underline transition-colors"
+              >
+                Reset setup wizard
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Current Step Content */}
         <motion.div
