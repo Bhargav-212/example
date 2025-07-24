@@ -24,41 +24,25 @@ const AIDocumentChat = () => {
   const { isConnected, address } = useWallet()
   const toast = useToast()
 
-  // Mock documents data
+  // Enhanced demo documents with smart contract focus
   useEffect(() => {
-    if (isConnected && address) {
-      const mockDocuments = [
-        {
-          id: 1,
-          fileName: 'SecureX_Whitepaper_v2.pdf',
-          ipfsHash: 'QmXyZ123abc456def789ghi012jkl345mno678pqr',
-          uploadDate: '2024-01-15',
-          description: 'Technical whitepaper describing SecureX architecture'
-        },
-        {
-          id: 2,
-          fileName: 'Smart_Contract_Audit_Report.pdf',
-          ipfsHash: 'QmAbc456def789xyz123uvw456qrs789tuv012wxy',
-          uploadDate: '2024-01-14',
-          description: 'Security audit results for smart contracts'
-        },
-        {
-          id: 3,
-          fileName: 'Technical_Documentation.docx',
-          ipfsHash: 'QmDef789ghi012jkl345mno678pqr901stu234vwx',
-          uploadDate: '2024-01-13',
-          description: 'Comprehensive technical documentation'
-        },
-        {
-          id: 4,
-          fileName: 'Project_Roadmap_2024.pdf',
-          ipfsHash: 'QmGhi012jkl345mno678pqr901stu234vwx567yz8',
-          uploadDate: '2024-01-12',
-          description: 'Development roadmap and milestones'
-        }
-      ]
-      setDocuments(mockDocuments)
-    }
+    const demoDocuments = [
+      {
+        id: 'smart_contract',
+        fileName: 'SecureX_Smart_Contract_V2.sol',
+        ipfsHash: 'QmSecX123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz8',
+        uploadDate: '2024-01-15',
+        description: 'Latest SecureX smart contract with enhanced security features and document storage capabilities'
+      },
+      {
+        id: 'whitepaper',
+        fileName: 'SecureX_Technical_Whitepaper.pdf',
+        ipfsHash: 'QmWhite789def012ghi345jkl678mno901pqr234stu567vwx890yz1234ab567cd8',
+        uploadDate: '2024-01-14',
+        description: 'Comprehensive technical documentation for SecureX platform architecture and blockchain integration'
+      }
+    ]
+    setDocuments(demoDocuments)
   }, [isConnected, address])
 
   const scrollToBottom = () => {
