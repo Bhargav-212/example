@@ -5,8 +5,6 @@ import DashboardLayout from './components/layout/DashboardLayout'
 import Overview from './pages/Overview'
 import Upload from './pages/Upload'
 import RecentDocuments from './pages/RecentDocuments'
-import Access from './pages/Access'
-import ActivityLogs from './pages/ActivityLogs'
 import DownloadCenter from './pages/DownloadCenter'
 import AIDocumentChat from './pages/AIDocumentChat'
 import AccessControl from './pages/AccessControl'
@@ -22,10 +20,6 @@ const App = () => {
         return <Upload />
       case 'recent':
         return <RecentDocuments />
-      case 'access':
-        return <Access />
-      case 'activity':
-        return <ActivityLogs />
       case 'download':
         return <DownloadCenter />
       case 'chat':
