@@ -15,6 +15,7 @@ import { useToast } from './Toast'
 const FreeBlockchainSetup = () => {
   const [currentStep, setCurrentStep] = useState(1)
   const [contractAddress, setContractAddress] = useState('')
+  const [isCompleted, setIsCompleted] = useState(false)
   const toast = useToast()
 
   const copyToClipboard = (text) => {
