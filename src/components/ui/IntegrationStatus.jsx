@@ -51,6 +51,17 @@ const IntegrationStatus = () => {
 
     return { status: 'success', message: 'Contract connected' }
   }
+
+  const getIPFSStatus = () => {
+    const pinataApiKey = import.meta.env.VITE_PINATA_API_KEY
+    const pinataSecret = import.meta.env.VITE_PINATA_SECRET
+
+    if (pinataApiKey && pinataSecret) {
+      return { status: 'success', message: 'Production Ready' }
+    }
+
+    return { status: 'warning', message: 'Demo Mode' }
+  }
   
   const networkStatus = getNetworkStatus()
   const contractStatus = getContractStatus()
