@@ -328,9 +328,19 @@ const AIDocumentChat = () => {
                     <div className="mt-4 space-y-2 text-sm text-gray-500">
                       <p>Try asking:</p>
                       <div className="space-y-1">
-                        <p>"What is the main purpose of this document?"</p>
-                        <p>"Summarize the key findings"</p>
-                        <p>"What are the security implications?"</p>
+                        {selectedDocument.fileName.toLowerCase().includes('contract') || selectedDocument.fileName.toLowerCase().includes('.sol') ? (
+                          <>
+                            <p>"How does the uploadDocument function work?"</p>
+                            <p>"What security features are implemented?"</p>
+                            <p>"Explain the smart contract architecture"</p>
+                          </>
+                        ) : (
+                          <>
+                            <p>"What is the SecureX platform architecture?"</p>
+                            <p>"How does blockchain integration work?"</p>
+                            <p>"What are the key features and benefits?"</p>
+                          </>
+                        )}
                       </div>
                     </div>
                   )}
