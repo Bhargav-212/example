@@ -400,70 +400,46 @@ contract SecureXDocuments {
           </div>
         )}
 
-        {/* Current Step Content */}
-        <motion.div
-          key={currentStep}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          className="space-y-4"
-        >
-          <div className="flex items-center space-x-3">
-            <currentStepData.icon className="w-6 h-6 text-neon-green" />
-            <div>
-              <h4 className="text-lg font-semibold text-white">{currentStepData.title}</h4>
-              <p className="text-gray-400 text-sm">{currentStepData.description}</p>
-            </div>
-          </div>
-
-          {currentStepData.content}
-
-          {/* Completion Message */}
-          {isCompleted && (
+        {/* Current Step Content - Only show if not completed */}
+        {!isCompleted && (
+          <>
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-center"
+              key={currentStep}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-4"
             >
-              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircleIcon className="w-8 h-8 text-green-400" />
+              <div className="flex items-center space-x-3">
+                <currentStepData.icon className="w-6 h-6 text-neon-green" />
+                <div>
+                  <h4 className="text-lg font-semibold text-white">{currentStepData.title}</h4>
+                  <p className="text-gray-400 text-sm">{currentStepData.description}</p>
+                </div>
               </div>
-              <h4 className="text-green-400 font-bold text-lg mb-2">🎉 Setup Complete!</h4>
-              <p className="text-gray-300 text-sm mb-4">
-                Your blockchain features are now active. Configuration code has been copied to clipboard.
-              </p>
-              <div className="space-y-2">
-                <p className="text-green-400 text-sm font-medium">✅ Contract deployed successfully</p>
-                <p className="text-green-400 text-sm font-medium">✅ Configuration generated</p>
-                <p className="text-green-400 text-sm font-medium">✅ Ready for Web3 features</p>
-              </div>
-              <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded">
-                <p className="text-blue-400 text-sm font-medium">Next Steps:</p>
-                <p className="text-gray-300 text-xs">
-                  Update src/config/contract.js with the copied configuration, then connect your wallet to start using blockchain features!
-                </p>
-              </div>
+
+              {currentStepData.content}
             </motion.div>
-          )}
-        </motion.div>
 
-        {/* Navigation */}
-        <div className="flex justify-between pt-4 border-t border-white/10">
-          <NeonButton
-            variant="outline"
-            disabled={currentStep === 1 || isCompleted}
-            onClick={() => setCurrentStep(currentStep - 1)}
-          >
-            Previous
-          </NeonButton>
+            {/* Navigation */}
+            <div className="flex justify-between pt-4 border-t border-white/10">
+              <NeonButton
+                variant="outline"
+                disabled={currentStep === 1}
+                onClick={() => setCurrentStep(currentStep - 1)}
+              >
+                Previous
+              </NeonButton>
 
-          <NeonButton
-            disabled={isCompleted || (currentStep === steps.length && !contractAddress.trim())}
-            onClick={handleNext}
-          >
-            {isCompleted ? '✅ Completed' : currentStep === steps.length ? 'Complete Setup' : 'Next'}
-          </NeonButton>
-        </div>
+              <NeonButton
+                disabled={currentStep === steps.length && !contractAddress.trim()}
+                onClick={handleNext}
+              >
+                {currentStep === steps.length ? 'Complete Setup' : 'Next'}
+              </NeonButton>
+            </div>
+          </>
+        )}
       </div>
     </GlassCard>
   )
