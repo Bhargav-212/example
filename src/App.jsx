@@ -9,6 +9,7 @@ import DownloadCenter from './pages/DownloadCenter'
 import AIDocumentChat from './pages/AIDocumentChat'
 import AccessControl from './pages/AccessControl'
 import MetaMaskHelper from './components/ui/MetaMaskHelper'
+import BlockchainSuccessNotification from './components/ui/BlockchainSuccessNotification'
 
 const App = () => {
   const [currentPage, setCurrentPage] = useState('overview')
