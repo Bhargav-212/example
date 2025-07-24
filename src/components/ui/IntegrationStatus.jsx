@@ -1,15 +1,17 @@
 import React from 'react'
-import { 
-  CheckCircleIcon, 
-  ExclamationTriangleIcon, 
+import {
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
   XCircleIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  StarIcon
 } from '@heroicons/react/24/outline'
 import GlassCard from './GlassCard'
 import { useWallet } from '../../contexts/WalletContext'
 import NeonButton from './NeonButton'
 import { getContractConfig } from '../../config/contract'
 import { isValidAddress } from '../../utils/addressUtils'
+import { freeStorageService } from '../../services/freeStorageService'
 
 const IntegrationStatus = () => {
   const { isConnected, address, chainId, contractInitialized, demoMode, setDemoMode } = useWallet()
