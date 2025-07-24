@@ -126,7 +126,9 @@ const RecentDocuments = () => {
         return '📄'
       case 'doc':
       case 'docx':
-        return '��'
+        return '📝'
+      case 'sol':
+        return '🔗'
       case 'txt':
         return '📃'
       case 'jpg':
