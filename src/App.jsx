@@ -38,6 +38,7 @@ const App = () => {
         <DashboardLayout currentPage={currentPage} onPageChange={setCurrentPage}>
           {renderPage()}
         </DashboardLayout>
+        <MetaMaskHelper />
       </WalletProvider>
     </ToastProvider>
   )
