@@ -75,6 +75,16 @@ export const CONTRACT_CONFIG = {
     }
   }
 
+  const handleReset = () => {
+    setCurrentStep(1)
+    setContractAddress('')
+    setIsCompleted(false)
+    localStorage.removeItem('securex_blockchain_setup_step')
+    localStorage.removeItem('securex_blockchain_setup_address')
+    localStorage.removeItem('securex_blockchain_setup_completed')
+    toast.success('Setup wizard reset successfully')
+  }
+
   const handleNext = () => {
     if (currentStep === steps.length) {
       handleComplete()
