@@ -331,17 +331,17 @@ contract SecureXDocuments {
         <div className="flex justify-between pt-4 border-t border-white/10">
           <NeonButton
             variant="outline"
-            disabled={currentStep === 1}
+            disabled={currentStep === 1 || isCompleted}
             onClick={() => setCurrentStep(currentStep - 1)}
           >
             Previous
           </NeonButton>
-          
+
           <NeonButton
-            disabled={currentStep === steps.length}
-            onClick={() => setCurrentStep(currentStep + 1)}
+            disabled={isCompleted || (currentStep === steps.length && !contractAddress.trim())}
+            onClick={handleNext}
           >
-            {currentStep === steps.length ? 'Complete' : 'Next'}
+            {isCompleted ? '✅ Completed' : currentStep === steps.length ? 'Complete Setup' : 'Next'}
           </NeonButton>
         </div>
       </div>
