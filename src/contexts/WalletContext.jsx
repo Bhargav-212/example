@@ -129,6 +129,12 @@ export const WalletProvider = ({ children }) => {
     console.log('Wallet disconnected')
   }
 
+  const clearPendingRequest = () => {
+    setLoading(false)
+    setError('')
+    console.log('Cleared pending connection request')
+  }
+
   const addSepoliaNetwork = async () => {
     if (!window.ethereum) return false
 
