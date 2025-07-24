@@ -45,8 +45,8 @@ const IntegrationStatus = () => {
     return { status: 'warning', message: 'Limited features' }
   }
   
-  const networkStatus = getNetworkStatus()
-  const contractStatus = getContractStatus()
+  const storageStatus = getFreeStorageStatus()
+  const browserStatus = getBrowserStatus()
   
   const StatusIcon = ({ status }) => {
     switch (status) {
