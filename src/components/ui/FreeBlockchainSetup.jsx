@@ -325,6 +325,34 @@ contract SecureXDocuments {
           </div>
 
           {currentStepData.content}
+
+          {/* Completion Message */}
+          {isCompleted && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-center"
+            >
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircleIcon className="w-8 h-8 text-green-400" />
+              </div>
+              <h4 className="text-green-400 font-bold text-lg mb-2">🎉 Setup Complete!</h4>
+              <p className="text-gray-300 text-sm mb-4">
+                Your blockchain features are now active. Configuration code has been copied to clipboard.
+              </p>
+              <div className="space-y-2">
+                <p className="text-green-400 text-sm font-medium">✅ Contract deployed successfully</p>
+                <p className="text-green-400 text-sm font-medium">✅ Configuration generated</p>
+                <p className="text-green-400 text-sm font-medium">✅ Ready for Web3 features</p>
+              </div>
+              <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded">
+                <p className="text-blue-400 text-sm font-medium">Next Steps:</p>
+                <p className="text-gray-300 text-xs">
+                  Update src/config/contract.js with the copied configuration, then connect your wallet to start using blockchain features!
+                </p>
+              </div>
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Navigation */}
