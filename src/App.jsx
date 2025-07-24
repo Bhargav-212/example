@@ -40,6 +40,7 @@ const App = () => {
           {renderPage()}
         </DashboardLayout>
         <MetaMaskHelper />
+        <BlockchainSuccessNotification />
       </WalletProvider>
     </ToastProvider>
   )
