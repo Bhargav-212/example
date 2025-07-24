@@ -15,54 +15,34 @@ import { freeStorageService } from '../../services/freeStorageService'
 
 const IntegrationStatus = () => {
   const { isConnected, address, chainId, contractInitialized, demoMode, setDemoMode } = useWallet()
-  
-  const getNetworkStatus = () => {
-    if (!chainId) return { status: 'disconnected', message: 'No network detected' }
-    
-    const isSupportedNetwork = chainId === 11155111n || chainId === 5n // Sepolia or Goerli
-    
-    if (isSupportedNetwork) {
-      return { 
-        status: 'success', 
-        message: chainId === 11155111n ? 'Sepolia Testnet' : 'Goerli Testnet'
-      }
-    }
-    
-    return { status: 'warning', message: 'Unsupported network' }
-  }
-  
-  const getContractStatus = () => {
-    if (!isConnected) return { status: 'disconnected', message: 'Wallet not connected' }
 
-    const config = getContractConfig(chainId)
+  // Get storage statistics for Free Edition
+  const storageStats = freeStorageService.getStorageStats()
+  const storageAvailable = freeStorageService.isStorageAvailable()
 
-    // Check if address is valid
-    if (!isValidAddress(config.contractAddress)) {
-      return { status: 'error', message: 'Invalid contract address' }
+  const getFreeStorageStatus = () => {
+    if (!storageAvailable) {
+      return { status: 'error', message: 'Storage unavailable' }
     }
 
-    // Check if using example address
-    const isExampleAddress = config.contractAddress.toLowerCase() === '0x742d35cc6506c4a9e6d29f0f9f5a8df07c9c31a5'
-    if (isExampleAddress) {
-      return { status: 'warning', message: 'Using example contract address' }
+    const usagePercent = (storageStats.documentsUsed / storageStats.documentsLimit) * 100
+
+    if (usagePercent >= 90) {
+      return { status: 'warning', message: `${storageStats.documentsRemaining} slots left` }
     }
 
-    if (!contractInitialized) {
-      return { status: 'error', message: 'Contract initialization failed' }
-    }
-
-    return { status: 'success', message: 'Contract connected' }
+    return { status: 'success', message: `${storageStats.documentsUsed}/${storageStats.documentsLimit} used` }
   }
 
-  const getIPFSStatus = () => {
-    const pinataApiKey = import.meta.env.VITE_PINATA_API_KEY
-    const pinataSecret = import.meta.env.VITE_PINATA_SECRET
+  const getBrowserStatus = () => {
+    const hasLocalStorage = typeof(Storage) !== "undefined"
+    const hasFileAPI = window.File && window.FileReader && window.FileList && window.Blob
 
-    if (pinataApiKey && pinataSecret) {
-      return { status: 'success', message: 'Production Ready' }
+    if (hasLocalStorage && hasFileAPI) {
+      return { status: 'success', message: 'Fully compatible' }
     }
 
-    return { status: 'warning', message: 'Demo Mode' }
+    return { status: 'warning', message: 'Limited features' }
   }
   
   const networkStatus = getNetworkStatus()
