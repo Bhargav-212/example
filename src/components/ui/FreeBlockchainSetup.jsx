@@ -13,10 +13,34 @@ import NeonButton from './NeonButton'
 import { useToast } from './Toast'
 
 const FreeBlockchainSetup = () => {
-  const [currentStep, setCurrentStep] = useState(1)
-  const [contractAddress, setContractAddress] = useState('')
-  const [isCompleted, setIsCompleted] = useState(false)
+  // Load state from localStorage on component mount
+  const [currentStep, setCurrentStep] = useState(() => {
+    const saved = localStorage.getItem('securex_blockchain_setup_step')
+    return saved ? parseInt(saved) : 1
+  })
+
+  const [contractAddress, setContractAddress] = useState(() => {
+    return localStorage.getItem('securex_blockchain_setup_address') || ''
+  })
+
+  const [isCompleted, setIsCompleted] = useState(() => {
+    return localStorage.getItem('securex_blockchain_setup_completed') === 'true'
+  })
+
   const toast = useToast()
+
+  // Save state to localStorage whenever it changes
+  React.useEffect(() => {
+    localStorage.setItem('securex_blockchain_setup_step', currentStep.toString())
+  }, [currentStep])
+
+  React.useEffect(() => {
+    localStorage.setItem('securex_blockchain_setup_address', contractAddress)
+  }, [contractAddress])
+
+  React.useEffect(() => {
+    localStorage.setItem('securex_blockchain_setup_completed', isCompleted.toString())
+  }, [isCompleted])
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text).then(() => {
