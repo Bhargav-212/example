@@ -91,47 +91,36 @@ const IntegrationStatus = () => {
         </div>
       </div>
       
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Wallet Status */}
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Local Storage Status */}
         <div className="flex items-center space-x-3">
-          <StatusIcon status={isConnected ? 'success' : 'disconnected'} />
+          <StatusIcon status={storageStatus.status} />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white">Wallet</p>
-            <StatusBadge status={isConnected ? 'success' : 'disconnected'}>
-              {isConnected ? 'Connected' : 'Not Connected'}
+            <p className="text-sm font-medium text-white">Storage</p>
+            <StatusBadge status={storageStatus.status}>
+              {storageStatus.message}
             </StatusBadge>
           </div>
         </div>
-        
-        {/* Network Status */}
+
+        {/* Browser Compatibility */}
         <div className="flex items-center space-x-3">
-          <StatusIcon status={networkStatus.status} />
+          <StatusIcon status={browserStatus.status} />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white">Network</p>
-            <StatusBadge status={networkStatus.status}>
-              {networkStatus.message}
+            <p className="text-sm font-medium text-white">Browser</p>
+            <StatusBadge status={browserStatus.status}>
+              {browserStatus.message}
             </StatusBadge>
           </div>
         </div>
-        
-        {/* Contract Status */}
+
+        {/* Free Edition Features */}
         <div className="flex items-center space-x-3">
-          <StatusIcon status={contractStatus.status} />
+          <StatusIcon status="success" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white">Contract</p>
-            <StatusBadge status={contractStatus.status}>
-              {contractStatus.message}
-            </StatusBadge>
-          </div>
-        </div>
-        
-        {/* IPFS Status */}
-        <div className="flex items-center space-x-3">
-          <StatusIcon status={getIPFSStatus().status} />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white">IPFS</p>
-            <StatusBadge status={getIPFSStatus().status}>
-              {getIPFSStatus().message}
+            <p className="text-sm font-medium text-white">Features</p>
+            <StatusBadge status="success">
+              No Setup Required
             </StatusBadge>
           </div>
         </div>
