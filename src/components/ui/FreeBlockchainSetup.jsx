@@ -26,6 +26,39 @@ const FreeBlockchainSetup = () => {
     })
   }
 
+  const handleComplete = () => {
+    if (contractAddress) {
+      // Show completion message
+      setIsCompleted(true)
+      toast.success('🎉 Blockchain setup complete! Your contract is ready to use.')
+
+      // Auto-copy the configuration
+      const configCode = `// Update your contract address in src/config/contract.js
+export const CONTRACT_CONFIG = {
+  sepolia: {
+    chainId: 11155111,
+    name: 'Sepolia Testnet',
+    rpcUrl: 'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
+    blockExplorer: 'https://sepolia.etherscan.io',
+    contractAddress: '${contractAddress}', // ← Your deployed contract
+  },
+  // ... rest of config
+}`
+
+      copyToClipboard(configCode)
+    } else {
+      toast.error('Please enter your contract address first')
+    }
+  }
+
+  const handleNext = () => {
+    if (currentStep === steps.length) {
+      handleComplete()
+    } else {
+      setCurrentStep(currentStep + 1)
+    }
+  }
+
   const contractCode = `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
