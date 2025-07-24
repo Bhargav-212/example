@@ -131,11 +131,11 @@ const IntegrationStatus = () => {
         
         {/* IPFS Status */}
         <div className="flex items-center space-x-3">
-          <StatusIcon status="warning" />
+          <StatusIcon status={getIPFSStatus().status} />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-white">IPFS</p>
-            <StatusBadge status="warning">
-              Mock Mode
+            <StatusBadge status={getIPFSStatus().status}>
+              {getIPFSStatus().message}
             </StatusBadge>
           </div>
         </div>
