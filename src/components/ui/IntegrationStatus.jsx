@@ -79,11 +79,14 @@ const IntegrationStatus = () => {
   return (
     <GlassCard className="p-4 mb-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white mb-0">Integration Status</h3>
+        <div className="flex items-center space-x-2">
+          <StarIcon className="w-5 h-5 text-yellow-400" />
+          <h3 className="text-lg font-semibold text-white mb-0">SecureX Free Edition</h3>
+        </div>
         <div className="flex items-center space-x-1">
-          <StatusIcon status={isConnected && contractInitialized ? 'success' : 'warning'} />
+          <StatusIcon status={storageAvailable ? 'success' : 'warning'} />
           <span className="text-sm text-gray-300">
-            {isConnected && contractInitialized ? 'Ready' : 'Setup Required'}
+            {storageAvailable ? 'Ready' : 'Setup Required'}
           </span>
         </div>
       </div>
