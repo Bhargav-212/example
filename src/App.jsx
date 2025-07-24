@@ -42,6 +42,7 @@ const App = () => {
         </DashboardLayout>
         <MetaMaskHelper />
         <BlockchainSuccessNotification />
+        <OptimizationComplete />
       </WalletProvider>
     </ToastProvider>
   )
