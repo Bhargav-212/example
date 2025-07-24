@@ -309,9 +309,14 @@ contract SecureXDocuments {
     <GlassCard className="p-6">
       <div className="space-y-6">
         <div className="text-center">
-          <h3 className="text-xl font-bold text-white mb-2">🎉 Add FREE Blockchain Features</h3>
+          <h3 className="text-xl font-bold text-white mb-2">
+            {isCompleted ? '✅ Blockchain Features Active' : '🎉 Add FREE Blockchain Features'}
+          </h3>
           <p className="text-gray-400">
-            Deploy a smart contract on Sepolia testnet at zero cost
+            {isCompleted
+              ? 'Your smart contract is deployed and ready to use'
+              : 'Deploy a smart contract on Sepolia testnet at zero cost'
+            }
           </p>
         </div>
 
