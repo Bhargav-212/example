@@ -173,10 +173,10 @@ const AIDocumentChat = () => {
     toast.info('Chat cleared')
   }
 
-  const copyToClipboard = async (text) => {
+  const copyToClipboard = async (text, type = 'IPFS Hash') => {
     try {
       await navigator.clipboard.writeText(text)
-      toast.success('IPFS hash copied to clipboard!')
+      toast.success(`${type} copied to clipboard!`)
     } catch (err) {
       toast.error('Failed to copy to clipboard')
     }
