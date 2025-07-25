@@ -290,10 +290,28 @@ const Upload = () => {
       }
     } catch (error) {
       console.error('Upload error:', error)
-      toast.error('Upload failed. Please try again.')
+      toast.error(`Upload failed: ${error.message || 'Please try again.'}`)
+
+      // Reset file states to prevent blank screen
+      try {
+        setFiles(prev => prev.map(f => ({
+          ...f,
+          status: f.status === 'uploading' ? 'ready' : f.status
+        })))
+      } catch (stateError) {
+        console.error('Error resetting file states:', stateError)
+        // Force reset files if state corruption
+        setFiles([])
+      }
     } finally {
-      setUploading(false)
-      setUploadProgress({})
+      try {
+        setUploading(false)
+        setUploadProgress({})
+      } catch (finalError) {
+        console.error('Error in upload cleanup:', finalError)
+        // Force page refresh as last resort
+        window.location.reload()
+      }
     }
   }
 
