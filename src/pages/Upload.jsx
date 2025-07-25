@@ -682,7 +682,7 @@ const Upload = () => {
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-2">
                             <code className="text-gray-400 text-sm bg-gray-800 px-2 py-1 rounded">
-                              {item.ipfsHash.slice(0, 15)}...
+                              {item.ipfsHash ? `${item.ipfsHash.slice(0, 15)}...` : 'N/A'}
                             </code>
                             <button
                               onClick={() => copyToClipboard(item.ipfsHash, 'IPFS Hash')}
