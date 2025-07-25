@@ -248,11 +248,20 @@ const Upload = () => {
           }
 
           // Save to local storage if in demo mode
-          if (demoMode) {
-            const savedDocument = localStorageService.saveDocument(newUpload)
-            setUploadHistory(prev => [savedDocument, ...prev])
-          } else {
+          try {
+            if (demoMode) {
+              console.log('Saving document to local storage:', newUpload)
+              const savedDocument = localStorageService.saveDocument(newUpload)
+              setUploadHistory(prev => [savedDocument, ...prev])
+              console.log('Document saved successfully to local storage')
+            } else {
+              setUploadHistory(prev => [newUpload, ...prev])
+            }
+          } catch (storageError) {
+            console.error('Error saving to local storage:', storageError)
+            // Still add to upload history even if local storage fails
             setUploadHistory(prev => [newUpload, ...prev])
+            toast.warning('Upload successful but failed to save to local storage')
           }
 
           const networkText = isFreeNetwork ? ' (Free Network)' : ''
