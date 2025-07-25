@@ -271,16 +271,21 @@ const Upload = () => {
         } catch (error) {
           console.error(`Upload failed for ${fileObj.file.name}:`, error)
 
-          // Update file status to failed
-          setFiles(prev => prev.map(f =>
-            f.id === fileObj.id ? {
-              ...f,
-              status: 'failed',
-              error: error.message
-            } : f
-          ))
+          // Update file status to failed with safe error handling
+          try {
+            setFiles(prev => prev.map(f =>
+              f.id === fileObj.id ? {
+                ...f,
+                status: 'failed',
+                error: error.message || 'Unknown error occurred'
+              } : f
+            ))
+          } catch (stateError) {
+            console.error('Error updating file state:', stateError)
+          }
 
-          toast.error(`Failed to upload ${fileObj.file.name}: ${error.message}`)
+          const errorMessage = error.message || 'Unknown error occurred'
+          toast.error(`Failed to upload ${fileObj.file.name}: ${errorMessage}`)
         }
       }
     } catch (error) {
