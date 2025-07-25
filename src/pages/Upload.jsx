@@ -592,7 +592,7 @@ const Upload = () => {
                               <div className="flex items-center space-x-2">
                                 <span className="text-xs text-gray-400">IPFS:</span>
                                 <code className="text-xs text-neon-green bg-black/30 px-2 py-1 rounded">
-                                  {fileObj.ipfsHash?.slice(0, 20)}...
+                                  {fileObj.ipfsHash ? `${fileObj.ipfsHash.slice(0, 20)}...` : 'Generating...'}
                                 </code>
                                 <button
                                   onClick={() => copyToClipboard(fileObj.ipfsHash, 'IPFS Hash')}
