@@ -24,41 +24,25 @@ const AIDocumentChat = () => {
   const { isConnected, address } = useWallet()
   const toast = useToast()
 
-  // Mock documents data
+  // Enhanced demo documents with smart contract focus
   useEffect(() => {
-    if (isConnected && address) {
-      const mockDocuments = [
-        {
-          id: 1,
-          fileName: 'SecureX_Whitepaper_v2.pdf',
-          ipfsHash: 'QmXyZ123abc456def789ghi012jkl345mno678pqr',
-          uploadDate: '2024-01-15',
-          description: 'Technical whitepaper describing SecureX architecture'
-        },
-        {
-          id: 2,
-          fileName: 'Smart_Contract_Audit_Report.pdf',
-          ipfsHash: 'QmAbc456def789xyz123uvw456qrs789tuv012wxy',
-          uploadDate: '2024-01-14',
-          description: 'Security audit results for smart contracts'
-        },
-        {
-          id: 3,
-          fileName: 'Technical_Documentation.docx',
-          ipfsHash: 'QmDef789ghi012jkl345mno678pqr901stu234vwx',
-          uploadDate: '2024-01-13',
-          description: 'Comprehensive technical documentation'
-        },
-        {
-          id: 4,
-          fileName: 'Project_Roadmap_2024.pdf',
-          ipfsHash: 'QmGhi012jkl345mno678pqr901stu234vwx567yz8',
-          uploadDate: '2024-01-12',
-          description: 'Development roadmap and milestones'
-        }
-      ]
-      setDocuments(mockDocuments)
-    }
+    const demoDocuments = [
+      {
+        id: 'smart_contract',
+        fileName: 'SecureX_Smart_Contract_V2.sol',
+        ipfsHash: 'QmSecX123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz8',
+        uploadDate: '2024-01-15',
+        description: 'Latest SecureX smart contract with enhanced security features and document storage capabilities'
+      },
+      {
+        id: 'whitepaper',
+        fileName: 'SecureX_Technical_Whitepaper.pdf',
+        ipfsHash: 'QmWhite789def012ghi345jkl678mno901pqr234stu567vwx890yz1234ab567cd8',
+        uploadDate: '2024-01-14',
+        description: 'Comprehensive technical documentation for SecureX platform architecture and blockchain integration'
+      }
+    ]
+    setDocuments(demoDocuments)
   }, [isConnected, address])
 
   const scrollToBottom = () => {
@@ -85,37 +69,74 @@ const AIDocumentChat = () => {
   }
 
   const generateAIResponse = (userMessage, document) => {
-    // Mock AI responses based on document type and message content
-    const responses = {
-      whitepaper: [
-        "Based on the SecureX whitepaper, the platform uses a hybrid approach combining IPFS for decentralized storage with smart contracts for verification. The architecture ensures both security and scalability.",
-        "According to the whitepaper, SecureX implements zero-knowledge proofs to maintain privacy while ensuring document integrity. This allows for verification without revealing document contents.",
-        "The whitepaper outlines three key components: the storage layer (IPFS), the verification layer (smart contracts), and the access control layer (cryptographic permissions)."
+    const message = userMessage.toLowerCase()
+
+    // Enhanced smart contract responses with context awareness
+    const smartContractResponses = {
+      general: [
+        "This Solidity smart contract implements a decentralized document storage system. It uses mappings to store document metadata and IPFS hashes for efficient retrieval.",
+        "The contract includes functions for uploadDocument(), getUserDocuments(), and getDocument() - providing a complete document management system on the blockchain.",
+        "Key features include: document ownership tracking, IPFS hash storage, timestamp recording, and event emission for blockchain transparency."
       ],
-      audit: [
-        "The audit report indicates that all critical vulnerabilities have been addressed. The smart contracts passed security analysis with no high-risk issues identified.",
-        "According to the audit findings, the access control mechanisms are properly implemented with role-based permissions and time-locked administrative functions.",
-        "The audit confirms that the IPFS integration follows best practices for content addressing and maintains immutable document references."
+      security: [
+        "The smart contract implements several security measures: access control through msg.sender verification, input validation, and secure mapping structures.",
+        "Events like DocumentUploaded and DocumentViewed provide audit trails, making all document interactions transparent and traceable on the blockchain.",
+        "The contract follows Solidity best practices: using proper data types, efficient gas usage, and protection against common vulnerabilities."
       ],
-      documentation: [
-        "The technical documentation explains that documents are encrypted client-side before IPFS storage, ensuring only authorized users can decrypt the content.",
-        "Based on the documentation, the system supports multiple file formats and implements content verification through cryptographic hashing.",
-        "The documentation details the API endpoints for document management, including upload, retrieval, and permission management functions."
+      functions: [
+        "uploadDocument() stores file metadata and IPFS hash on-chain, increments document count, and emits an event for transparency.",
+        "getUserDocuments() returns an array of document IDs owned by a specific address, enabling easy document discovery.",
+        "getDocument() retrieves complete document information including filename, IPFS hash, uploader, timestamp, and status."
       ],
-      roadmap: [
-        "The 2024 roadmap indicates several upcoming features including advanced AI document analysis, cross-chain compatibility, and enhanced privacy features.",
-        "According to the roadmap, Q2 2024 will focus on implementing advanced search capabilities and document relationship mapping.",
-        "The roadmap shows plans for integrating with additional blockchain networks and expanding IPFS gateway options for improved reliability."
+      technical: [
+        "The contract uses efficient mapping structures: documents[id] for metadata and userDocuments[address] for ownership tracking.",
+        "IPFS integration allows storing large files off-chain while maintaining on-chain verification through cryptographic hashes.",
+        "The Document struct contains: fileName, ipfsHash, uploader, timestamp, fileSize, and isActive for comprehensive metadata."
       ]
     }
 
-    let responseCategory = 'whitepaper'
-    if (document.fileName.toLowerCase().includes('audit')) responseCategory = 'audit'
-    else if (document.fileName.toLowerCase().includes('documentation')) responseCategory = 'documentation'
-    else if (document.fileName.toLowerCase().includes('roadmap')) responseCategory = 'roadmap'
+    const whitepaperResponses = {
+      architecture: [
+        "The SecureX architecture combines three layers: IPFS for decentralized storage, smart contracts for verification, and a React frontend for user interaction.",
+        "The platform uses a hybrid approach - storing file metadata on Ethereum/Sepolia blockchain while keeping actual files on IPFS for scalability.",
+        "Key components include: Web3 wallet integration (MetaMask), smart contract deployment, IPFS content addressing, and real-time blockchain interaction."
+      ],
+      blockchain: [
+        "SecureX leverages Ethereum's security and decentralization for document verification while using IPFS for efficient file storage.",
+        "The platform supports both testnet (Sepolia/Goerli) for development and mainnet for production deployments.",
+        "Smart contract events provide real-time updates, enabling the frontend to display document uploads and views instantly."
+      ],
+      features: [
+        "Core features include: wallet connection, document upload to blockchain, IPFS integration, activity tracking, and AI-powered document analysis.",
+        "The platform offers both Free Edition (local storage) and Blockchain Edition (decentralized storage) to accommodate different user needs.",
+        "Advanced features include contract address validation, network detection, transaction monitoring, and seamless Web3 integration."
+      ]
+    }
 
-    const categoryResponses = responses[responseCategory]
-    return categoryResponses[Math.floor(Math.random() * categoryResponses.length)]
+    // Determine response category based on message content and document type
+    let responses = []
+
+    if (document.fileName.toLowerCase().includes('contract') || document.fileName.toLowerCase().includes('.sol')) {
+      if (message.includes('security') || message.includes('safe') || message.includes('audit')) {
+        responses = smartContractResponses.security
+      } else if (message.includes('function') || message.includes('method') || message.includes('how')) {
+        responses = smartContractResponses.functions
+      } else if (message.includes('technical') || message.includes('implement') || message.includes('code')) {
+        responses = smartContractResponses.technical
+      } else {
+        responses = smartContractResponses.general
+      }
+    } else {
+      if (message.includes('architecture') || message.includes('design') || message.includes('structure')) {
+        responses = whitepaperResponses.architecture
+      } else if (message.includes('blockchain') || message.includes('ethereum') || message.includes('decentralized')) {
+        responses = whitepaperResponses.blockchain
+      } else {
+        responses = whitepaperResponses.features
+      }
+    }
+
+    return responses[Math.floor(Math.random() * responses.length)]
   }
 
   const sendMessage = async () => {
@@ -307,9 +328,19 @@ const AIDocumentChat = () => {
                     <div className="mt-4 space-y-2 text-sm text-gray-500">
                       <p>Try asking:</p>
                       <div className="space-y-1">
-                        <p>"What is the main purpose of this document?"</p>
-                        <p>"Summarize the key findings"</p>
-                        <p>"What are the security implications?"</p>
+                        {selectedDocument.fileName.toLowerCase().includes('contract') || selectedDocument.fileName.toLowerCase().includes('.sol') ? (
+                          <>
+                            <p>"How does the uploadDocument function work?"</p>
+                            <p>"What security features are implemented?"</p>
+                            <p>"Explain the smart contract architecture"</p>
+                          </>
+                        ) : (
+                          <>
+                            <p>"What is the SecureX platform architecture?"</p>
+                            <p>"How does blockchain integration work?"</p>
+                            <p>"What are the key features and benefits?"</p>
+                          </>
+                        )}
                       </div>
                     </div>
                   )}
