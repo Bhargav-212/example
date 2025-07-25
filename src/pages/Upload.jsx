@@ -685,8 +685,9 @@ const Upload = () => {
                               {item.ipfsHash ? `${item.ipfsHash.slice(0, 15)}...` : 'N/A'}
                             </code>
                             <button
-                              onClick={() => copyToClipboard(item.ipfsHash, 'IPFS Hash')}
+                              onClick={() => item.ipfsHash && copyToClipboard(item.ipfsHash, 'IPFS Hash')}
                               className="p-1 text-gray-400 hover:text-neon-green transition-colors"
+                              disabled={!item.ipfsHash}
                             >
                               <LinkIcon className="w-3 h-3" />
                             </button>
