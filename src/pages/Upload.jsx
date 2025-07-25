@@ -608,8 +608,9 @@ const Upload = () => {
                                   {fileObj.transactionHash ? `${fileObj.transactionHash.slice(0, 20)}...` : 'Generating...'}
                                 </code>
                                 <button
-                                  onClick={() => copyToClipboard(fileObj.transactionHash, 'Transaction Hash')}
+                                  onClick={() => fileObj.transactionHash && copyToClipboard(fileObj.transactionHash, 'Transaction Hash')}
                                   className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
+                                  disabled={!fileObj.transactionHash}
                                 >
                                   <LinkIcon className="w-3 h-3" />
                                 </button>
