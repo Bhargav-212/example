@@ -13,7 +13,6 @@ import NeonButton from '../components/ui/NeonButton'
 import { useWallet } from '../contexts/WalletContext'
 import { useToast } from '../components/ui/Toast'
 import contractService from '../services/contractService'
-import localStorageService from '../services/localStorageService'
 import { getContractConfig } from '../config/contract'
 
 const RecentDocuments = () => {
@@ -39,10 +38,18 @@ const RecentDocuments = () => {
 
         let contractDocs
         if (demoMode) {
-          // Initialize demo data if needed
-          localStorageService.initializeDemoData(address)
-          // Get documents from local storage
-          contractDocs = localStorageService.getUserDocuments(address)
+          // Return demo documents
+          contractDocs = [
+            {
+              id: 1,
+              fileName: 'Demo_Document.pdf',
+              ipfsHash: 'QmDemo123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz8',
+              uploadDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+              fileSize: 1234567,
+              uploader: address,
+              timestamp: Math.floor(Date.now() / 1000) - 172800
+            }
+          ]
         } else {
           contractDocs = await contractService.getUserDocuments(address)
         }
@@ -116,18 +123,7 @@ const RecentDocuments = () => {
     }
   }
 
-  const openIPFS = (hash, documentId) => {
-    // Increment view count in demo mode
-    if (demoMode && documentId) {
-      localStorageService.incrementViews(documentId)
-      // Update local state to reflect the change
-      setDocuments(prev => prev.map(doc =>
-        doc.id === documentId
-          ? { ...doc, views: (doc.views || 0) + 1, lastAccessed: new Date().toISOString() }
-          : doc
-      ))
-    }
-
+  const openIPFS = (hash) => {
     window.open(`https://ipfs.io/ipfs/${hash}`, '_blank')
     toast.success('Opening document on IPFS')
   }
@@ -266,7 +262,7 @@ const RecentDocuments = () => {
 
                 <div className="flex space-x-2">
                   <NeonButton
-                    onClick={() => openIPFS(doc.ipfsHash, doc.id)}
+                    onClick={() => openIPFS(doc.ipfsHash)}
                     size="sm"
                     className="flex-1 flex items-center justify-center space-x-2"
                   >

@@ -17,7 +17,6 @@ import { useWallet } from '../contexts/WalletContext'
 import { useToast } from '../components/ui/Toast'
 import contractService from '../services/contractService'
 import ipfsService from '../services/ipfsService'
-import localStorageService from '../services/localStorageService'
 
 const Upload = () => {
   const [dragActive, setDragActive] = useState(false)
@@ -35,30 +34,17 @@ const Upload = () => {
   const isExpensiveNetwork = chainId && [1, 137].includes(Number(chainId))
   const isFreeNetwork = chainId && [5, 11155111, 80001, 80002].includes(Number(chainId))
 
-  // Load upload history from local storage and contract
+  // Load upload history from contract
   useEffect(() => {
     const loadUploadHistory = async () => {
-      if (isConnected && address) {
+      if (isConnected && address && contractInitialized) {
         try {
-          // Initialize demo data if needed
-          if (demoMode) {
-            localStorageService.initializeDemoData(address)
-          }
-
-          let documents = []
-          if (demoMode) {
-            // Get documents from local storage in demo mode
-            documents = localStorageService.getUserDocuments(address)
-          } else if (contractInitialized) {
-            // Get documents from contract
-            documents = await contractService.getUserDocuments(address)
-          }
-
+          const documents = await contractService.getUserDocuments(address)
           const history = documents.map(doc => ({
             id: doc.id,
             name: doc.fileName,
             ipfsHash: doc.ipfsHash,
-            transactionHash: doc.transactionHash || `0x${Math.random().toString(16).substr(2, 64)}`,
+            transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`, // Mock tx hash for display
             uploadDate: doc.uploadDate,
             fileSize: doc.fileSize,
             status: 'completed'
@@ -71,7 +57,7 @@ const Upload = () => {
     }
 
     loadUploadHistory()
-  }, [isConnected, address, contractInitialized, demoMode])
+  }, [isConnected, address, contractInitialized])
 
   const handleDrag = (e) => {
     e.preventDefault()
@@ -165,29 +151,28 @@ const Upload = () => {
         ))
 
         try {
-          let ipfsResult
+          // Step 1: Upload to IPFS
+          console.log('Uploading to IPFS:', fileObj.file.name)
+
+          const ipfsResult = await ipfsService.uploadFile(
+            fileObj.file,
+            (progress) => {
+              setUploadProgress(prev => ({ ...prev, [fileObj.id]: Math.floor(progress * 0.7) }))
+            }
+          )
+
+          if (!ipfsResult.success) {
+            throw new Error('IPFS upload failed')
+          }
+
+          // Step 2: Upload to blockchain (or simulate in demo mode)
+          console.log('Uploading to blockchain:', ipfsResult.hash)
+          setUploadProgress(prev => ({ ...prev, [fileObj.id]: 70 }))
+
           let contractResult
-
           if (demoMode) {
-            // Simulate both IPFS and blockchain upload in demo mode
-            console.log('Simulating upload in demo mode:', fileObj.file.name)
-
-            // Simulate IPFS upload progress
-            for (let progress = 0; progress <= 70; progress += 10) {
-              setUploadProgress(prev => ({ ...prev, [fileObj.id]: progress }))
-              await new Promise(resolve => setTimeout(resolve, 100))
-            }
-
-            // Simulate IPFS result
-            ipfsResult = {
-              success: true,
-              hash: `Qm${Math.random().toString(36).substr(2, 44)}`
-            }
-
-            // Simulate blockchain upload
-            setUploadProgress(prev => ({ ...prev, [fileObj.id]: 80 }))
-            await new Promise(resolve => setTimeout(resolve, 500))
-
+            // Simulate blockchain upload in demo mode
+            await new Promise(resolve => setTimeout(resolve, 1000))
             contractResult = {
               success: true,
               transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`,
@@ -196,24 +181,6 @@ const Upload = () => {
               gasUsed: (Math.floor(Math.random() * 50000) + 100000).toString()
             }
           } else {
-            // Real upload for non-demo mode
-            console.log('Uploading to IPFS:', fileObj.file.name)
-
-            ipfsResult = await ipfsService.uploadFile(
-              fileObj.file,
-              (progress) => {
-                setUploadProgress(prev => ({ ...prev, [fileObj.id]: Math.floor(progress * 0.7) }))
-              }
-            )
-
-            if (!ipfsResult.success) {
-              throw new Error('IPFS upload failed')
-            }
-
-            // Step 2: Upload to blockchain
-            console.log('Uploading to blockchain:', ipfsResult.hash)
-            setUploadProgress(prev => ({ ...prev, [fileObj.id]: 70 }))
-
             contractResult = await contractService.uploadDocument(
               fileObj.file.name,
               ipfsResult.hash,
@@ -234,35 +201,18 @@ const Upload = () => {
             } : f
           ))
 
-          // Add to upload history and local storage
+          // Add to upload history
           const newUpload = {
             id: contractResult.documentId || Date.now() + Math.random(),
             name: fileObj.file.name,
-            fileName: fileObj.file.name,
             ipfsHash: ipfsResult.hash,
             transactionHash: contractResult.transactionHash,
             uploadDate: new Date().toISOString(),
             fileSize: fileObj.file.size,
-            uploader: address,
             status: 'completed'
           }
 
-          // Save to local storage if in demo mode
-          try {
-            if (demoMode) {
-              console.log('Saving document to local storage:', newUpload)
-              const savedDocument = localStorageService.saveDocument(newUpload)
-              setUploadHistory(prev => [savedDocument, ...prev])
-              console.log('Document saved successfully to local storage')
-            } else {
-              setUploadHistory(prev => [newUpload, ...prev])
-            }
-          } catch (storageError) {
-            console.error('Error saving to local storage:', storageError)
-            // Still add to upload history even if local storage fails
-            setUploadHistory(prev => [newUpload, ...prev])
-            toast.warning('Upload successful but failed to save to local storage')
-          }
+          setUploadHistory(prev => [newUpload, ...prev])
 
           const networkText = isFreeNetwork ? ' (Free Network)' : ''
           const modeText = demoMode ? ' (Demo Mode)' : ''
@@ -271,47 +221,24 @@ const Upload = () => {
         } catch (error) {
           console.error(`Upload failed for ${fileObj.file.name}:`, error)
 
-          // Update file status to failed with safe error handling
-          try {
-            setFiles(prev => prev.map(f =>
-              f.id === fileObj.id ? {
-                ...f,
-                status: 'failed',
-                error: error.message || 'Unknown error occurred'
-              } : f
-            ))
-          } catch (stateError) {
-            console.error('Error updating file state:', stateError)
-          }
+          // Update file status to failed
+          setFiles(prev => prev.map(f =>
+            f.id === fileObj.id ? {
+              ...f,
+              status: 'failed',
+              error: error.message
+            } : f
+          ))
 
-          const errorMessage = error.message || 'Unknown error occurred'
-          toast.error(`Failed to upload ${fileObj.file.name}: ${errorMessage}`)
+          toast.error(`Failed to upload ${fileObj.file.name}: ${error.message}`)
         }
       }
     } catch (error) {
       console.error('Upload error:', error)
-      toast.error(`Upload failed: ${error.message || 'Please try again.'}`)
-
-      // Reset file states to prevent blank screen
-      try {
-        setFiles(prev => prev.map(f => ({
-          ...f,
-          status: f.status === 'uploading' ? 'ready' : f.status
-        })))
-      } catch (stateError) {
-        console.error('Error resetting file states:', stateError)
-        // Force reset files if state corruption
-        setFiles([])
-      }
+      toast.error('Upload failed. Please try again.')
     } finally {
-      try {
-        setUploading(false)
-        setUploadProgress({})
-      } catch (finalError) {
-        console.error('Error in upload cleanup:', finalError)
-        // Force page refresh as last resort
-        window.location.reload()
-      }
+      setUploading(false)
+      setUploadProgress({})
     }
   }
 
@@ -592,12 +519,11 @@ const Upload = () => {
                               <div className="flex items-center space-x-2">
                                 <span className="text-xs text-gray-400">IPFS:</span>
                                 <code className="text-xs text-neon-green bg-black/30 px-2 py-1 rounded">
-                                  {fileObj.ipfsHash ? `${fileObj.ipfsHash.slice(0, 20)}...` : 'Generating...'}
+                                  {fileObj.ipfsHash?.slice(0, 20)}...
                                 </code>
                                 <button
-                                  onClick={() => fileObj.ipfsHash && copyToClipboard(fileObj.ipfsHash, 'IPFS Hash')}
+                                  onClick={() => copyToClipboard(fileObj.ipfsHash, 'IPFS Hash')}
                                   className="p-1 text-gray-400 hover:text-neon-green transition-colors"
-                                  disabled={!fileObj.ipfsHash}
                                 >
                                   <LinkIcon className="w-3 h-3" />
                                 </button>
@@ -605,12 +531,11 @@ const Upload = () => {
                               <div className="flex items-center space-x-2">
                                 <span className="text-xs text-gray-400">TX:</span>
                                 <code className="text-xs text-blue-400 bg-black/30 px-2 py-1 rounded">
-                                  {fileObj.transactionHash ? `${fileObj.transactionHash.slice(0, 20)}...` : 'Generating...'}
+                                  {fileObj.transactionHash?.slice(0, 20)}...
                                 </code>
                                 <button
-                                  onClick={() => fileObj.transactionHash && copyToClipboard(fileObj.transactionHash, 'Transaction Hash')}
+                                  onClick={() => copyToClipboard(fileObj.transactionHash, 'Transaction Hash')}
                                   className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
-                                  disabled={!fileObj.transactionHash}
                                 >
                                   <LinkIcon className="w-3 h-3" />
                                 </button>
@@ -684,12 +609,11 @@ const Upload = () => {
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-2">
                             <code className="text-gray-400 text-sm bg-gray-800 px-2 py-1 rounded">
-                              {item.ipfsHash ? `${item.ipfsHash.slice(0, 15)}...` : 'N/A'}
+                              {item.ipfsHash.slice(0, 15)}...
                             </code>
                             <button
-                              onClick={() => item.ipfsHash && copyToClipboard(item.ipfsHash, 'IPFS Hash')}
+                              onClick={() => copyToClipboard(item.ipfsHash, 'IPFS Hash')}
                               className="p-1 text-gray-400 hover:text-neon-green transition-colors"
-                              disabled={!item.ipfsHash}
                             >
                               <LinkIcon className="w-3 h-3" />
                             </button>
@@ -698,12 +622,11 @@ const Upload = () => {
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-2">
                             <code className="text-blue-400 text-sm bg-gray-800 px-2 py-1 rounded">
-                              {item.transactionHash ? `${item.transactionHash.slice(0, 10)}...` : 'N/A'}
+                              {item.transactionHash.slice(0, 10)}...
                             </code>
                             <button
-                              onClick={() => item.transactionHash && copyToClipboard(item.transactionHash, 'Transaction Hash')}
+                              onClick={() => copyToClipboard(item.transactionHash, 'Transaction Hash')}
                               className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
-                              disabled={!item.transactionHash}
                             >
                               <LinkIcon className="w-3 h-3" />
                             </button>

@@ -16,7 +16,6 @@ import NeonButton from '../components/ui/NeonButton'
 import { useWallet } from '../contexts/WalletContext'
 import { useToast } from '../components/ui/Toast'
 import contractService from '../services/contractService'
-import localStorageService from '../services/localStorageService'
 import ipfsService from '../services/ipfsService'
 
 const DownloadCenter = () => {
@@ -24,7 +23,7 @@ const DownloadCenter = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [downloadStatus, setDownloadStatus] = useState({})
   const [loading, setLoading] = useState(true)
-  const { isConnected, address, contractInitialized, demoMode } = useWallet()
+  const { isConnected, address, contractInitialized } = useWallet()
   const toast = useToast()
 
   // Helper function to determine MIME type from file extension
@@ -40,10 +39,10 @@ const DownloadCenter = () => {
     }
   }
 
-  // Fetch documents from local storage or contract for download capabilities
+  // Fetch documents from contract for download capabilities
   useEffect(() => {
     const fetchDocuments = async () => {
-      if (!isConnected || !address || (!contractInitialized && !demoMode)) {
+      if (!isConnected || !address || !contractInitialized) {
         setLoading(false)
         return
       }
@@ -51,28 +50,19 @@ const DownloadCenter = () => {
       setLoading(true)
 
       try {
-        console.log('Fetching documents for download center', demoMode ? '(Demo Mode)' : '(Contract)')
+        console.log('Fetching documents for download center')
+        const contractDocs = await contractService.getUserDocuments(address)
 
-        let contractDocs = []
-        if (demoMode) {
-          // Initialize demo data if needed
-          localStorageService.initializeDemoData(address)
-          // Get documents from local storage
-          contractDocs = localStorageService.getUserDocuments(address)
-        } else {
-          contractDocs = await contractService.getUserDocuments(address)
-        }
-
-        // Transform documents for download center
+        // Transform contract documents for download center
         const enhancedDocs = contractDocs.map(doc => ({
           id: doc.id,
           fileName: doc.fileName,
           ipfsHash: doc.ipfsHash,
           fileSize: doc.fileSize,
           uploadDate: doc.uploadDate,
-          mimeType: doc.mimeType || getMimeType(doc.fileName),
-          downloadCount: doc.downloadCount || 0,
-          lastDownload: doc.lastDownload || new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)).toISOString(),
+          mimeType: getMimeType(doc.fileName),
+          downloadCount: Math.floor(Math.random() * 100) + 1,
+          lastDownload: new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)).toISOString(),
           status: 'available'
         }))
 
@@ -89,7 +79,7 @@ const DownloadCenter = () => {
     }
 
     fetchDocuments()
-  }, [isConnected, address, contractInitialized, demoMode, toast])
+  }, [isConnected, address, contractInitialized, toast])
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes'
@@ -145,12 +135,7 @@ const DownloadCenter = () => {
         setDownloadStatus(prev => ({ ...prev, [document.id]: 'completed' }))
         toast.success(`${document.fileName} downloaded successfully!`)
 
-        // Update download count in local storage for demo mode
-        if (demoMode) {
-          localStorageService.incrementDownloads(document.id)
-        }
-
-        // Update local state
+        // Update download count (in a real app, this would be tracked on-chain)
         setDocuments(prev => prev.map(doc =>
           doc.id === document.id
             ? { ...doc, downloadCount: doc.downloadCount + 1, lastDownload: new Date().toISOString() }
@@ -230,9 +215,7 @@ const DownloadCenter = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white mb-4">Download Center</h1>
-          <p className="text-gray-300">
-            Download your documents directly from IPFS {demoMode ? '(Demo Mode)' : ''}
-          </p>
+          <p className="text-gray-300">Download your documents directly from IPFS</p>
         </div>
         <div className="flex items-center space-x-4 text-sm">
           <div className="flex items-center space-x-2 text-gray-400">
@@ -350,7 +333,7 @@ const DownloadCenter = () => {
                         ? 'bg-green-500/20 text-green-400' 
                         : 'bg-yellow-500/20 text-yellow-400'
                     }`}>
-                      {doc.status === 'available' ? '�� Available' : '⏳ Processing'}
+                      {doc.status === 'available' ? '✓ Available' : '⏳ Processing'}
                     </span>
                     <span className="text-gray-500">{doc.mimeType.split('/')[1]?.toUpperCase()}</span>
                   </div>

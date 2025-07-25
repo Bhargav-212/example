@@ -13,7 +13,6 @@ import GlassCard from '../components/ui/GlassCard'
 import NeonButton from '../components/ui/NeonButton'
 import { useWallet } from '../contexts/WalletContext'
 import { useToast } from '../components/ui/Toast'
-import localStorageService from '../services/localStorageService'
 
 const AIDocumentChat = () => {
   const [selectedDocument, setSelectedDocument] = useState(null)
@@ -22,27 +21,12 @@ const AIDocumentChat = () => {
   const [isTyping, setIsTyping] = useState(false)
   const [documents, setDocuments] = useState([])
   const messagesEndRef = useRef(null)
-  const { isConnected, address, demoMode } = useWallet()
+  const { isConnected, address } = useWallet()
   const toast = useToast()
 
-  // Load documents from local storage
+  // Mock documents data
   useEffect(() => {
-    if (isConnected && address && demoMode) {
-      // Initialize demo data if needed
-      localStorageService.initializeDemoData(address)
-
-      // Get user documents from local storage
-      const userDocuments = localStorageService.getUserDocuments(address)
-
-      // Add descriptions for AI chat context
-      const documentsWithDescriptions = userDocuments.map(doc => ({
-        ...doc,
-        description: getDocumentDescription(doc.fileName)
-      }))
-
-      setDocuments(documentsWithDescriptions)
-    } else if (isConnected && address && !demoMode) {
-      // For non-demo mode, use mock data or implement contract fetching
+    if (isConnected && address) {
       const mockDocuments = [
         {
           id: 1,
@@ -57,13 +41,25 @@ const AIDocumentChat = () => {
           ipfsHash: 'QmAbc456def789xyz123uvw456qrs789tuv012wxy',
           uploadDate: '2024-01-14',
           description: 'Security audit results for smart contracts'
+        },
+        {
+          id: 3,
+          fileName: 'Technical_Documentation.docx',
+          ipfsHash: 'QmDef789ghi012jkl345mno678pqr901stu234vwx',
+          uploadDate: '2024-01-13',
+          description: 'Comprehensive technical documentation'
+        },
+        {
+          id: 4,
+          fileName: 'Project_Roadmap_2024.pdf',
+          ipfsHash: 'QmGhi012jkl345mno678pqr901stu234vwx567yz8',
+          uploadDate: '2024-01-12',
+          description: 'Development roadmap and milestones'
         }
       ]
       setDocuments(mockDocuments)
-    } else {
-      setDocuments([])
     }
-  }, [isConnected, address, demoMode])
+  }, [isConnected, address])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -85,21 +81,6 @@ const AIDocumentChat = () => {
         return '📃'
       default:
         return '📎'
-    }
-  }
-
-  const getDocumentDescription = (fileName) => {
-    const lowerName = fileName.toLowerCase()
-    if (lowerName.includes('whitepaper')) {
-      return 'Technical whitepaper describing SecureX architecture'
-    } else if (lowerName.includes('audit')) {
-      return 'Security audit results for smart contracts'
-    } else if (lowerName.includes('documentation')) {
-      return 'Comprehensive technical documentation'
-    } else if (lowerName.includes('roadmap')) {
-      return 'Development roadmap and milestones'
-    } else {
-      return 'Document available for AI analysis'
     }
   }
 
@@ -173,10 +154,10 @@ const AIDocumentChat = () => {
     toast.info('Chat cleared')
   }
 
-  const copyToClipboard = async (text, type = 'IPFS Hash') => {
+  const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text)
-      toast.success(`${type} copied to clipboard!`)
+      toast.success('IPFS hash copied to clipboard!')
     } catch (err) {
       toast.error('Failed to copy to clipboard')
     }
@@ -244,7 +225,7 @@ const AIDocumentChat = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
-                            copyToClipboard(doc.ipfsHash, 'IPFS Hash')
+                            copyToClipboard(doc.ipfsHash)
                           }}
                           className="p-1 hover:bg-white/10 rounded transition-colors"
                           title="Copy IPFS hash"

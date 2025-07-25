@@ -17,7 +17,6 @@ import NeonButton from '../components/ui/NeonButton'
 import { useWallet } from '../contexts/WalletContext'
 import { useToast } from '../components/ui/Toast'
 import contractService from '../services/contractService'
-import localStorageService from '../services/localStorageService'
 import { getContractConfig } from '../config/contract'
 
 const ActivityLogs = () => {
@@ -26,13 +25,13 @@ const ActivityLogs = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('all')
   const [error, setError] = useState('')
-  const { isConnected, address, chainId, contractInitialized, demoMode } = useWallet()
+  const { isConnected, address, chainId, contractInitialized } = useWallet()
   const toast = useToast()
 
-  // Fetch activity logs from local storage or contract
+  // Fetch real contract events and user documents for activity logs
   useEffect(() => {
     const fetchActivityLogs = async () => {
-      if (!isConnected || !address || (!contractInitialized && !demoMode)) {
+      if (!isConnected || !address || !contractInitialized) {
         setLoading(false)
         return
       }
@@ -41,86 +40,70 @@ const ActivityLogs = () => {
       setError('')
 
       try {
-        console.log('Fetching activity logs for:', address, demoMode ? '(Demo Mode)' : '(Contract)')
+        console.log('Fetching activity logs for:', address)
 
-        let allActivities = []
+        // Get user's documents to create upload activities
+        const documents = await contractService.getUserDocuments(address)
 
-        if (demoMode) {
-          // Initialize demo data if needed
-          localStorageService.initializeDemoData(address)
-          // Get activity logs from local storage
-          allActivities = localStorageService.getActivityLogs()
+        // Transform documents into activity log format
+        const uploadActivities = documents.map((doc, index) => ({
+          id: `upload-${doc.id}`,
+          type: 'upload',
+          action: 'Document Uploaded',
+          fileName: doc.fileName,
+          ipfsHash: doc.ipfsHash,
+          user: doc.uploader,
+          timestamp: doc.uploadDate,
+          blockNumber: 4890000 + index * 100, // Mock block numbers
+          transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`, // Mock tx hashes
+          gasUsed: (Math.floor(Math.random() * 50000) + 100000).toLocaleString(),
+          status: 'confirmed'
+        }))
 
-          // Filter to current user's activities
-          allActivities = allActivities.filter(activity =>
-            activity.user?.toLowerCase() === address?.toLowerCase()
-          )
-        } else {
-          // Get user's documents from contract to create upload activities
-          const documents = await contractService.getUserDocuments(address)
+        // Add some mock view and download activities for demonstration
+        const mockViewDownloadActivities = documents.flatMap((doc, index) => {
+          const activities = []
 
-          // Transform documents into activity log format
-          const uploadActivities = documents.map((doc, index) => ({
-            id: `upload-${doc.id}`,
-            type: 'upload',
-            action: 'Document Uploaded',
-            fileName: doc.fileName,
-            ipfsHash: doc.ipfsHash,
-            user: doc.uploader,
-            timestamp: doc.uploadDate,
-            blockNumber: 4890000 + index * 100, // Mock block numbers
-            transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`, // Mock tx hashes
-            gasUsed: (Math.floor(Math.random() * 50000) + 100000).toLocaleString(),
-            status: 'confirmed'
-          }))
+          // Add view activities
+          for (let i = 0; i < Math.floor(Math.random() * 3) + 1; i++) {
+            activities.push({
+              id: `view-${doc.id}-${i}`,
+              type: 'view',
+              action: 'Document Accessed',
+              fileName: doc.fileName,
+              ipfsHash: doc.ipfsHash,
+              user: `0x${Math.random().toString(16).substr(2, 40)}`,
+              timestamp: new Date(Date.now() - Math.floor(Math.random() * 48) * 60 * 60 * 1000).toISOString(),
+              blockNumber: 4890000 + index * 100 + i,
+              transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`,
+              gasUsed: (Math.floor(Math.random() * 10000) + 15000).toLocaleString(),
+              status: 'confirmed'
+            })
+          }
 
-          // Add some mock view and download activities for demonstration
-          const mockViewDownloadActivities = documents.flatMap((doc, index) => {
-            const activities = []
+          // Add download activities
+          if (Math.random() > 0.5) {
+            activities.push({
+              id: `download-${doc.id}`,
+              type: 'download',
+              action: 'Document Downloaded',
+              fileName: doc.fileName,
+              ipfsHash: doc.ipfsHash,
+              user: `0x${Math.random().toString(16).substr(2, 40)}`,
+              timestamp: new Date(Date.now() - Math.floor(Math.random() * 24) * 60 * 60 * 1000).toISOString(),
+              blockNumber: 4890000 + index * 100 + 50,
+              transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`,
+              gasUsed: (Math.floor(Math.random() * 20000) + 20000).toLocaleString(),
+              status: 'confirmed'
+            })
+          }
 
-            // Add view activities
-            for (let i = 0; i < Math.floor(Math.random() * 3) + 1; i++) {
-              activities.push({
-                id: `view-${doc.id}-${i}`,
-                type: 'view',
-                action: 'Document Accessed',
-                fileName: doc.fileName,
-                ipfsHash: doc.ipfsHash,
-                user: `0x${Math.random().toString(16).substr(2, 40)}`,
-                timestamp: new Date(Date.now() - Math.floor(Math.random() * 48) * 60 * 60 * 1000).toISOString(),
-                blockNumber: 4890000 + index * 100 + i,
-                transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`,
-                gasUsed: (Math.floor(Math.random() * 10000) + 15000).toLocaleString(),
-                status: 'confirmed'
-              })
-            }
+          return activities
+        })
 
-            // Add download activities
-            if (Math.random() > 0.5) {
-              activities.push({
-                id: `download-${doc.id}`,
-                type: 'download',
-                action: 'Document Downloaded',
-                fileName: doc.fileName,
-                ipfsHash: doc.ipfsHash,
-                user: `0x${Math.random().toString(16).substr(2, 40)}`,
-                timestamp: new Date(Date.now() - Math.floor(Math.random() * 24) * 60 * 60 * 1000).toISOString(),
-                blockNumber: 4890000 + index * 100 + 50,
-                transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`,
-                gasUsed: (Math.floor(Math.random() * 20000) + 20000).toLocaleString(),
-                status: 'confirmed'
-              })
-            }
-
-            return activities
-          })
-
-          // Combine all activities
-          allActivities = [...uploadActivities, ...mockViewDownloadActivities]
-        }
-
-        // Sort by timestamp (newest first)
-        allActivities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        // Combine all activities and sort by timestamp (newest first)
+        const allActivities = [...uploadActivities, ...mockViewDownloadActivities]
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
 
         setActivities(allActivities)
         console.log(`Loaded ${allActivities.length} activity logs`)
@@ -136,7 +119,7 @@ const ActivityLogs = () => {
     }
 
     fetchActivityLogs()
-  }, [isConnected, address, contractInitialized, demoMode, toast])
+  }, [isConnected, address, contractInitialized, toast])
 
   const getActivityIcon = (type) => {
     switch (type) {
@@ -219,7 +202,7 @@ const ActivityLogs = () => {
           <ClockIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h2>
           <p className="text-gray-400">
-            Please connect your wallet to view activity logs {demoMode ? 'from local storage' : 'from the contract'}.
+            Please connect your wallet to view activity logs from the Sepolia contract.
           </p>
         </GlassCard>
       </div>
@@ -231,9 +214,7 @@ const ActivityLogs = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white mb-4">Activity Logs</h1>
-          <p className="text-gray-300">
-            Chronological events from {demoMode ? 'local storage' : 'Sepolia smart contract'}
-          </p>
+          <p className="text-gray-300">Chronological events from Sepolia smart contract</p>
         </div>
         <div className="flex items-center space-x-2 text-sm text-gray-400">
           <span>Contract Events:</span>

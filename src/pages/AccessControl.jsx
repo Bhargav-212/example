@@ -15,7 +15,6 @@ import {
 import GlassCard from '../components/ui/GlassCard'
 import NeonButton from '../components/ui/NeonButton'
 import { useWallet } from '../contexts/WalletContext'
-import localStorageService from '../services/localStorageService'
 
 const AccessControl = () => {
   const [accessLogs, setAccessLogs] = useState([])
@@ -23,79 +22,123 @@ const AccessControl = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTimeframe, setSelectedTimeframe] = useState('7d')
   const [loading, setLoading] = useState(true)
-  const { isConnected, address, demoMode } = useWallet()
+  const { isConnected, address } = useWallet()
 
-  // Load access control data from local storage or mock data
+  // Mock access control data
   useEffect(() => {
     const fetchAccessData = async () => {
       setLoading(true)
-
+      
       // Simulate loading delay
       await new Promise(resolve => setTimeout(resolve, 1000))
-
+      
       if (isConnected && address) {
-        let userDocuments = []
-        let activityLogs = []
+        const mockAccessLogs = [
+          {
+            id: 1,
+            documentName: 'SecureX_Whitepaper_v2.pdf',
+            userAddress: '0x742d35cc6bbf4c03...',
+            action: 'view',
+            timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+            ipAddress: '192.168.1.100',
+            location: 'New York, US',
+            browser: 'Chrome 120',
+            duration: '5 minutes'
+          },
+          {
+            id: 2,
+            documentName: 'Smart_Contract_Audit_Report.pdf',
+            userAddress: '0x8ba1f109551bd432...',
+            action: 'download',
+            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+            ipAddress: '10.0.0.50',
+            location: 'London, UK',
+            browser: 'Firefox 121',
+            duration: '1 minute'
+          },
+          {
+            id: 3,
+            documentName: 'Technical_Documentation.docx',
+            userAddress: address,
+            action: 'view',
+            timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+            ipAddress: '172.16.0.25',
+            location: 'San Francisco, US',
+            browser: 'Safari 17',
+            duration: '12 minutes'
+          },
+          {
+            id: 4,
+            documentName: 'Project_Roadmap_2024.pdf',
+            userAddress: '0x123abc456def789g...',
+            action: 'view',
+            timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+            ipAddress: '203.0.113.45',
+            location: 'Tokyo, JP',
+            browser: 'Edge 120',
+            duration: '7 minutes'
+          },
+          {
+            id: 5,
+            documentName: 'API_Documentation.pdf',
+            userAddress: '0x456def789abc123d...',
+            action: 'download',
+            timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+            ipAddress: '198.51.100.78',
+            location: 'Berlin, DE',
+            browser: 'Chrome 120',
+            duration: '2 minutes'
+          }
+        ]
 
-        if (demoMode) {
-          // Initialize demo data if needed
-          localStorageService.initializeDemoData(address)
+        const mockDocuments = [
+          {
+            id: 1,
+            name: 'SecureX_Whitepaper_v2.pdf',
+            totalViews: 145,
+            uniqueViewers: 87,
+            downloads: 23,
+            lastAccessed: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+            accessLevel: 'public'
+          },
+          {
+            id: 2,
+            name: 'Smart_Contract_Audit_Report.pdf',
+            totalViews: 89,
+            uniqueViewers: 45,
+            downloads: 34,
+            lastAccessed: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+            accessLevel: 'restricted'
+          },
+          {
+            id: 3,
+            name: 'Technical_Documentation.docx',
+            totalViews: 234,
+            uniqueViewers: 120,
+            downloads: 67,
+            lastAccessed: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+            accessLevel: 'public'
+          },
+          {
+            id: 4,
+            name: 'Project_Roadmap_2024.pdf',
+            totalViews: 178,
+            uniqueViewers: 98,
+            downloads: 45,
+            lastAccessed: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+            accessLevel: 'public'
+          }
+        ]
 
-          // Get documents and activity logs from local storage
-          userDocuments = localStorageService.getUserDocuments(address)
-          activityLogs = localStorageService.getActivityLogs()
-
-          // Filter activity logs for current user's documents
-          const userDocumentNames = userDocuments.map(doc => doc.fileName)
-          activityLogs = activityLogs.filter(log =>
-            userDocumentNames.includes(log.fileName)
-          )
-        } else {
-          // Use mock data for non-demo mode
-          userDocuments = [
-            {
-              id: 1,
-              fileName: 'SecureX_Whitepaper_v2.pdf',
-              views: 145,
-              downloadCount: 23,
-              lastAccessed: new Date(Date.now() - 30 * 60 * 1000).toISOString()
-            }
-          ]
-        }
-
-        // Transform documents for access control display
-        const documentsWithStats = userDocuments.map(doc => ({
-          id: doc.id,
-          name: doc.fileName,
-          totalViews: doc.views || Math.floor(Math.random() * 200) + 50,
-          uniqueViewers: Math.floor((doc.views || 100) * 0.6),
-          downloads: doc.downloadCount || Math.floor(Math.random() * 50) + 10,
-          lastAccessed: doc.lastAccessed || doc.uploadDate,
-          accessLevel: Math.random() > 0.7 ? 'restricted' : 'public'
-        }))
-
-        // Transform activity logs for access control display
-        const accessLogsFormatted = activityLogs.map((log, index) => ({
-          id: log.id || index + 1,
-          documentName: log.fileName,
-          userAddress: log.user === address ? address : `0x${Math.random().toString(16).substr(2, 16)}...`,
-          action: log.type,
-          timestamp: log.timestamp,
-          ipAddress: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
-          location: ['New York, US', 'London, UK', 'Tokyo, JP', 'Berlin, DE', 'San Francisco, US'][Math.floor(Math.random() * 5)],
-          browser: ['Chrome 120', 'Firefox 121', 'Safari 17', 'Edge 120'][Math.floor(Math.random() * 4)],
-          duration: `${Math.floor(Math.random() * 15) + 1} minutes`
-        }))
-
-        setDocuments(documentsWithStats)
-        setAccessLogs(accessLogsFormatted)
+        setAccessLogs(mockAccessLogs)
+        setDocuments(mockDocuments)
       }
-
+      
       setLoading(false)
     }
 
     fetchAccessData()
-  }, [isConnected, address, demoMode])
+  }, [isConnected, address])
 
   const formatTimeAgo = (timestamp) => {
     const now = new Date()
@@ -177,9 +220,7 @@ const AccessControl = () => {
           <ShieldCheckIcon className="w-8 h-8 text-neon-green" />
           <span>Access Control</span>
         </h1>
-        <p className="text-gray-300">
-          Monitor who has accessed your documents {demoMode ? '(Demo Mode)' : ''}
-        </p>
+        <p className="text-gray-300">Monitor who has accessed your documents</p>
       </div>
 
       {/* Analytics Overview */}
