@@ -604,7 +604,7 @@ const Upload = () => {
                               <div className="flex items-center space-x-2">
                                 <span className="text-xs text-gray-400">TX:</span>
                                 <code className="text-xs text-blue-400 bg-black/30 px-2 py-1 rounded">
-                                  {fileObj.transactionHash?.slice(0, 20)}...
+                                  {fileObj.transactionHash ? `${fileObj.transactionHash.slice(0, 20)}...` : 'Generating...'}
                                 </code>
                                 <button
                                   onClick={() => copyToClipboard(fileObj.transactionHash, 'Transaction Hash')}
