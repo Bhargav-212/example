@@ -695,7 +695,7 @@ const Upload = () => {
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-2">
                             <code className="text-blue-400 text-sm bg-gray-800 px-2 py-1 rounded">
-                              {item.transactionHash.slice(0, 10)}...
+                              {item.transactionHash ? `${item.transactionHash.slice(0, 10)}...` : 'N/A'}
                             </code>
                             <button
                               onClick={() => copyToClipboard(item.transactionHash, 'Transaction Hash')}
