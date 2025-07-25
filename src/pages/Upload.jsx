@@ -57,7 +57,7 @@ const Upload = () => {
     }
 
     loadUploadHistory()
-  }, [isConnected, address, contractInitialized, demoMode])
+  }, [isConnected, address, contractInitialized])
 
   const handleDrag = (e) => {
     e.preventDefault()
