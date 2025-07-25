@@ -17,6 +17,7 @@ import { useWallet } from '../contexts/WalletContext'
 import { useToast } from '../components/ui/Toast'
 import contractService from '../services/contractService'
 import ipfsService from '../services/ipfsService'
+import localStorageService from '../services/localStorageService'
 
 const Upload = () => {
   const [dragActive, setDragActive] = useState(false)
@@ -34,17 +35,30 @@ const Upload = () => {
   const isExpensiveNetwork = chainId && [1, 137].includes(Number(chainId))
   const isFreeNetwork = chainId && [5, 11155111, 80001, 80002].includes(Number(chainId))
 
-  // Load upload history from contract
+  // Load upload history from local storage and contract
   useEffect(() => {
     const loadUploadHistory = async () => {
-      if (isConnected && address && contractInitialized) {
+      if (isConnected && address) {
         try {
-          const documents = await contractService.getUserDocuments(address)
+          // Initialize demo data if needed
+          if (demoMode) {
+            localStorageService.initializeDemoData(address)
+          }
+
+          let documents = []
+          if (demoMode) {
+            // Get documents from local storage in demo mode
+            documents = localStorageService.getUserDocuments(address)
+          } else if (contractInitialized) {
+            // Get documents from contract
+            documents = await contractService.getUserDocuments(address)
+          }
+
           const history = documents.map(doc => ({
             id: doc.id,
             name: doc.fileName,
             ipfsHash: doc.ipfsHash,
-            transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`, // Mock tx hash for display
+            transactionHash: doc.transactionHash || `0x${Math.random().toString(16).substr(2, 64)}`,
             uploadDate: doc.uploadDate,
             fileSize: doc.fileSize,
             status: 'completed'
@@ -57,7 +71,7 @@ const Upload = () => {
     }
 
     loadUploadHistory()
-  }, [isConnected, address, contractInitialized])
+  }, [isConnected, address, contractInitialized, demoMode])
 
   const handleDrag = (e) => {
     e.preventDefault()
@@ -201,18 +215,26 @@ const Upload = () => {
             } : f
           ))
 
-          // Add to upload history
+          // Add to upload history and local storage
           const newUpload = {
             id: contractResult.documentId || Date.now() + Math.random(),
             name: fileObj.file.name,
+            fileName: fileObj.file.name,
             ipfsHash: ipfsResult.hash,
             transactionHash: contractResult.transactionHash,
             uploadDate: new Date().toISOString(),
             fileSize: fileObj.file.size,
+            uploader: address,
             status: 'completed'
           }
 
-          setUploadHistory(prev => [newUpload, ...prev])
+          // Save to local storage if in demo mode
+          if (demoMode) {
+            const savedDocument = localStorageService.saveDocument(newUpload)
+            setUploadHistory(prev => [savedDocument, ...prev])
+          } else {
+            setUploadHistory(prev => [newUpload, ...prev])
+          }
 
           const networkText = isFreeNetwork ? ' (Free Network)' : ''
           const modeText = demoMode ? ' (Demo Mode)' : ''
