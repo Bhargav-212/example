@@ -165,28 +165,29 @@ const Upload = () => {
         ))
 
         try {
-          // Step 1: Upload to IPFS
-          console.log('Uploading to IPFS:', fileObj.file.name)
-
-          const ipfsResult = await ipfsService.uploadFile(
-            fileObj.file,
-            (progress) => {
-              setUploadProgress(prev => ({ ...prev, [fileObj.id]: Math.floor(progress * 0.7) }))
-            }
-          )
-
-          if (!ipfsResult.success) {
-            throw new Error('IPFS upload failed')
-          }
-
-          // Step 2: Upload to blockchain (or simulate in demo mode)
-          console.log('Uploading to blockchain:', ipfsResult.hash)
-          setUploadProgress(prev => ({ ...prev, [fileObj.id]: 70 }))
-
+          let ipfsResult
           let contractResult
+
           if (demoMode) {
-            // Simulate blockchain upload in demo mode
-            await new Promise(resolve => setTimeout(resolve, 1000))
+            // Simulate both IPFS and blockchain upload in demo mode
+            console.log('Simulating upload in demo mode:', fileObj.file.name)
+
+            // Simulate IPFS upload progress
+            for (let progress = 0; progress <= 70; progress += 10) {
+              setUploadProgress(prev => ({ ...prev, [fileObj.id]: progress }))
+              await new Promise(resolve => setTimeout(resolve, 100))
+            }
+
+            // Simulate IPFS result
+            ipfsResult = {
+              success: true,
+              hash: `Qm${Math.random().toString(36).substr(2, 44)}`
+            }
+
+            // Simulate blockchain upload
+            setUploadProgress(prev => ({ ...prev, [fileObj.id]: 80 }))
+            await new Promise(resolve => setTimeout(resolve, 500))
+
             contractResult = {
               success: true,
               transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`,
@@ -195,6 +196,24 @@ const Upload = () => {
               gasUsed: (Math.floor(Math.random() * 50000) + 100000).toString()
             }
           } else {
+            // Real upload for non-demo mode
+            console.log('Uploading to IPFS:', fileObj.file.name)
+
+            ipfsResult = await ipfsService.uploadFile(
+              fileObj.file,
+              (progress) => {
+                setUploadProgress(prev => ({ ...prev, [fileObj.id]: Math.floor(progress * 0.7) }))
+              }
+            )
+
+            if (!ipfsResult.success) {
+              throw new Error('IPFS upload failed')
+            }
+
+            // Step 2: Upload to blockchain
+            console.log('Uploading to blockchain:', ipfsResult.hash)
+            setUploadProgress(prev => ({ ...prev, [fileObj.id]: 70 }))
+
             contractResult = await contractService.uploadDocument(
               fileObj.file.name,
               ipfsResult.hash,
