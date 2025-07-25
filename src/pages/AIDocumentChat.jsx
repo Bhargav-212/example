@@ -244,7 +244,7 @@ const AIDocumentChat = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
-                            copyToClipboard(doc.ipfsHash)
+                            copyToClipboard(doc.ipfsHash, 'IPFS Hash')
                           }}
                           className="p-1 hover:bg-white/10 rounded transition-colors"
                           title="Copy IPFS hash"
