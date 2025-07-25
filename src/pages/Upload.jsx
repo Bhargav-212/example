@@ -27,7 +27,7 @@ const Upload = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const fileInputRef = useRef(null)
   
-  const { isConnected, address, signer, chainId, contractInitialized, demoMode } = useWallet()
+  const { isConnected, address, signer, chainId, contractInitialized, demoMode = false } = useWallet()
   const toast = useToast()
 
   // Check if using expensive network
