@@ -699,8 +699,9 @@ const Upload = () => {
                               {item.transactionHash ? `${item.transactionHash.slice(0, 10)}...` : 'N/A'}
                             </code>
                             <button
-                              onClick={() => copyToClipboard(item.transactionHash, 'Transaction Hash')}
+                              onClick={() => item.transactionHash && copyToClipboard(item.transactionHash, 'Transaction Hash')}
                               className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
+                              disabled={!item.transactionHash}
                             >
                               <LinkIcon className="w-3 h-3" />
                             </button>
