@@ -19,7 +19,7 @@ const RecentDocuments = () => {
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const { isConnected, address, chainId, contractInitialized, demoMode } = useWallet()
+  const { isConnected, address, chainId, contractInitialized, demoMode = false } = useWallet()
   const toast = useToast()
 
   // Fetch documents from deployed smart contract
